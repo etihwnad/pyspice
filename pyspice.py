@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #@+leo-ver=4-thin
-#@+node:etihwnad.20060605200356.1:@thin C:/cygwin/home/Dan/soft/pyspice/pyspice.py
+#@+node:etihwnad.20060606092308.1:@thin pyspice.py
 #@@first
 #@@language python
 #@@tabwidth -4
@@ -336,7 +336,9 @@ class Mosfet(SpiceElement):
     def isparallel(self,other):
         """Returns True if transistors are parallel
         """
+        # check gate, substrate, and model first
         if self.g==other.g and self.b==other.b and self.model==other.model:
+            #source and drain can be reversed
             if self.d==other.d and self.s==other.s:
                 return True
             elif self.d==other.s and self.s==other.d:
@@ -345,6 +347,7 @@ class Mosfet(SpiceElement):
                 return False
         else:
             return False
+    
     #@-node:etihwnad.20060605200356.22:isparallel
     #@+node:etihwnad.20060605200356.23:combine
     def combine(self,other):
@@ -365,6 +368,11 @@ class Mosfet(SpiceElement):
         else:
             return False
     #@-node:etihwnad.20060605200356.23:combine
+    #@+node:etihwnad.20060605200356.26:info
+    def info(message):
+        """Print information to stderr."""
+        print>>stderr,'Info:',message
+    #@-node:etihwnad.20060605200356.26:info
     #@-others
 #@-node:etihwnad.20060605200356.19:class Mosfet
 #@+node:etihwnad.20060605200356.24:class Resistor
@@ -383,14 +391,6 @@ class Resistor(Passive2NodeElement):
     #@-others
 #@-node:etihwnad.20060605200356.24:class Resistor
 #@-node:etihwnad.20060605211347:classes
-#@+node:etihwnad.20060605200356.26:info
-##
-# Function definitions
-##
-def info(message):
-    """Print information to stderr."""
-    print>>stderr,'Info:',message
-#@-node:etihwnad.20060605200356.26:info
 #@+node:etihwnad.20060605200356.27:debug
 def debug(message):
     """Print debugging info to stderr."""
@@ -831,5 +831,5 @@ def main():
 #magic script-maker
 if __name__ == '__main__':
     main()
-#@-node:etihwnad.20060605200356.1:@thin C:/cygwin/home/Dan/soft/pyspice/pyspice.py
+#@-node:etihwnad.20060606092308.1:@thin pyspice.py
 #@-leo
