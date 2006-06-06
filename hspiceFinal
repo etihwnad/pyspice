@@ -1,3 +1,7 @@
+* test netlist for running tests on pyspice
+* this netlist will be continually updated until I come up with a
+* better testing framework
+*
 * # FILE NAME: /SPACE/DWHITE/CADENCE/SIMULATION/TOP_CLASSD/HSPICES/             
 * EXTRACTED/NETLIST/TOP_CLASSD.C.RAW
 * NETLIST OUTPUT FOR HSPICES.
