@@ -78,6 +78,7 @@ xpreserve comments in position
 #@-node:etihwnad.20060605202632.1:todo
 #@-others
 """
+#@@nocolor
 #@-node:etihwnad.20060605200356.2:<< head docstring>>
 #@nl
 #@<< global imports >>
@@ -134,6 +135,65 @@ _current_scope=''
 dbg=''
 
 #@+others
+#@+node:etihwnad.20060609195838:Option processing
+#@+node:etihwnad.20060605200356.36:options
+##
+# Fancy option processing
+##
+def options(args=sys.argv):
+    """Define options and parse argument list.
+    """
+    global ifp, ofp
+    usage="""%prog [options]"""
+    desc="""This script reads a SPICE input files and processes it according
+    to the options given.  It is especially useful for processing netlists
+    from the output of layout extractors by combining parallel C's and
+    FET's.  More features added upon request."""
+    parser = OptionParser(usage=usage,description=desc)
+    parser.add_option('-i',dest='infile',default='stdin',
+                      help='Input SPICE file to be processed'
+                           ', (default: %default)')
+    parser.add_option('-o',dest='outfile',default='stdout',
+                      help='Output file for changes'
+                           ', (default: %default)')
+    parser.add_option('-d',dest='dropcap',
+                      default='10', metavar='X',
+                      help='Drop all capacitors smaller than X fF'
+                           ', (default: %default)')
+    parser.add_option('-v',dest='v',action='store_true',
+                      default=True,
+                      help='Show info and debugging messages (default)')
+    parser.add_option('-q',dest='v',action='store_false',
+                      help='Suppress all messages on stderr')
+    (opt, args) = parser.parse_args()
+    #infile
+    if opt.infile=='stdin':
+        ifp=sys.stdin
+        if opt.v: info('Input: stdin')
+    else:
+        try:
+            ifp=open(opt.infile,'rU') #python's universal line ending mode
+            if opt.v: info('Input: '+opt.infile)
+        except IOError, (errno,strerror):
+            print>>stderr, "IOError(%s): %s '%s'" % (errno,strerror,opt.infile)
+    #outfile
+    if opt.outfile=='stdout':
+        ofp=sys.stdout
+        if opt.v: info('Output: stdout')
+    else:
+        try:
+            ofp=open(opt.outfile,'w')
+            if opt.v: info('Output: '+opt.outfile)
+        except IOError, (errno,strerror):
+            print>>stderr, "IOError(%s): %s '%s'" % (errno,strerror,opt.infile)
+    #dropcap
+    opt.dropcap=float(opt.dropcap)
+    opt.dropcap=opt.dropcap*1e-15
+    if opt.v: info('Dropping caps < '+str(opt.dropcap)+' F')
+    #return the option object
+    return opt
+#@-node:etihwnad.20060605200356.36:options
+#@-node:etihwnad.20060609195838:Option processing
 #@+node:etihwnad.20060605211347:classes
 #@+node:etihwnad.20060605200356.3:class SpiceElement
 class SpiceElement:
@@ -368,11 +428,6 @@ class Mosfet(SpiceElement):
         else:
             return False
     #@-node:etihwnad.20060605200356.23:combine
-    #@+node:etihwnad.20060605200356.26:info
-    def info(message):
-        """Print information to stderr."""
-        print>>stderr,'Info:',message
-    #@-node:etihwnad.20060605200356.26:info
     #@-others
 #@-node:etihwnad.20060605200356.19:class Mosfet
 #@+node:etihwnad.20060605200356.24:class Resistor
@@ -391,11 +446,17 @@ class Resistor(Passive2NodeElement):
     #@-others
 #@-node:etihwnad.20060605200356.24:class Resistor
 #@-node:etihwnad.20060605211347:classes
+#@+node:etihwnad.20060609195838.1:helpers
 #@+node:etihwnad.20060605200356.27:debug
 def debug(message):
     """Print debugging info to stderr."""
     print>>stderr,'Debug:',message
 #@-node:etihwnad.20060605200356.27:debug
+#@+node:etihwnad.20060605200356.26:info
+def info(message):
+    """Print information to stderr."""
+    print>>stderr,'Info:',message
+#@-node:etihwnad.20060605200356.26:info
 #@+node:etihwnad.20060605200356.28:warning
 def warning(message,elm=None,num=None):
     """Print warning to stderr.  If elm and num defined,
@@ -405,6 +466,7 @@ def warning(message,elm=None,num=None):
                 "' type not defined yet, passing through..."
     print>>stderr,'Warning:',message
 #@-node:etihwnad.20060605200356.28:warning
+#@-node:etihwnad.20060609195838.1:helpers
 #@+node:etihwnad.20060605200356.29:drop_2node
 def drop_2node(elm,val,mode='<',type=None, verbose=True):
     """Drop 2-node elements in elm list according to val.
@@ -476,17 +538,28 @@ def write_2node(elm, type=None, ofp=sys.stdout, comment=None):
 #   use this function to make sure you read the entire netlist
 ##
 def read_netlist(fname):
+    #@    << docstring >>
+    #@+node:etihwnad.20060609200142:<< docstring >>
     """Read a SPICE netlist from the open file pointer
     
     read_netlist(filename) -> array lines
-
+    
     Returns a list of expanded lines (without continuation '+')
     Keeps case of comments, all other lines are lowercased
-
+    
     return:
         netlist (list) of SPICE netlist lines
     """
+    #@nonl
+    #@-node:etihwnad.20060609200142:<< docstring >>
+    #@nl
+    #@    << imports >>
+    #@+node:etihwnad.20060609200142.1:<< imports >>
     import re
+    #@nonl
+    #@-node:etihwnad.20060609200142.1:<< imports >>
+    #@nl
+
     if isinstance(fname,file):
         ifp=fname
     else:
@@ -726,63 +799,6 @@ def classify(net):
     #return classified netlist
     return elements
 #@-node:etihwnad.20060605200356.35:classify
-#@+node:etihwnad.20060605200356.36:options
-##
-# Fancy option processing
-##
-def options(args=sys.argv):
-    """Define options and parse argument list.
-    """
-    global ifp, ofp
-    usage="""%prog [options]"""
-    desc="""This script reads a SPICE input files and processes it according
-    to the options given.  It is especially useful for processing netlists
-    from the output of layout extractors by combining parallel C's and
-    FET's.  More features added upon request."""
-    parser = OptionParser(usage=usage,description=desc)
-    parser.add_option('-i',dest='infile',default='stdin',
-                      help='Input SPICE file to be processed'
-                           ', (default: %default)')
-    parser.add_option('-o',dest='outfile',default='stdout',
-                      help='Output file for changes'
-                           ', (default: %default)')
-    parser.add_option('-d',dest='dropcap',
-                      default='10', metavar='X',
-                      help='Drop all capacitors smaller than X fF'
-                           ', (default: %default)')
-    parser.add_option('-v',dest='v',action='store_true',
-                      default=True,
-                      help='Show info and debugging messages (default)')
-    parser.add_option('-q',dest='v',action='store_false',
-                      help='Suppress all messages on stderr')
-    (opt, args) = parser.parse_args()
-    #infile
-    if opt.infile=='stdin':
-        ifp=sys.stdin
-        if opt.v: info('Input: stdin')
-    else:
-        try:
-            ifp=open(opt.infile,'rU') #python's universal line ending mode
-            if opt.v: info('Input: '+opt.infile)
-        except IOError, (errno,strerror):
-            print>>stderr, "IOError(%s): %s '%s'" % (errno,strerror,opt.infile)
-    #outfile
-    if opt.outfile=='stdout':
-        ofp=sys.stdout
-        if opt.v: info('Output: stdout')
-    else:
-        try:
-            ofp=open(opt.outfile,'w')
-            if opt.v: info('Output: '+opt.outfile)
-        except IOError, (errno,strerror):
-            print>>stderr, "IOError(%s): %s '%s'" % (errno,strerror,opt.infile)
-    #dropcap
-    opt.dropcap=float(opt.dropcap)
-    opt.dropcap=opt.dropcap*1e-15
-    if opt.v: info('Dropping caps < '+str(opt.dropcap)+' F')
-    #return the option object
-    return opt
-#@-node:etihwnad.20060605200356.36:options
 #@+node:etihwnad.20060605200356.37:main
 ####
 # 
