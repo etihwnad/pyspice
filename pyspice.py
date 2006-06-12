@@ -85,12 +85,12 @@ xpreserve comments in position
 #@+node:etihwnad.20060605210612:<< global imports >>
 import sys, getopt, textwrap, warnings
 from optparse import OptionParser
+import re
 
 try:
-    from cStringIO import StringIO
+    from cStringIO import StringIO as StringIO
 except:
-    from StringIO import StringIO
-#@nonl
+    from StringIO import StringIO as StringIO
 #@-node:etihwnad.20060605210612:<< global imports >>
 #@nl
 #@<< global vars >>
@@ -279,11 +279,11 @@ class Passive2NodeElement(SpiceElement):
         self.num=num
         self.n1=_current_scope+line[1]
         self.n2=_current_scope+line[2]
-        self.value=float(line[3])
+        self.value=unit(line[3])
         self.param=dict() #store x=y as dictionary
         for p in line[4:]:
             k,v=p.split('=')
-            self.param[k]=float(v)
+            self.param[k]=unit(v)
     #@-node:etihwnad.20060605200356.12:__init__
     #@+node:etihwnad.20060605200356.13:__str__
     def __str__(self):
@@ -380,7 +380,7 @@ class Mosfet(SpiceElement):
         self.param=dict()
         for p in line[6:]:
             k,v=p.split('=')
-            self.param[k]=float(v)
+            self.param[k]=unit(v)
         self.w=self.param['w']
         self.l=self.param['l']
     #@-node:etihwnad.20060605200356.20:__init__
@@ -447,6 +447,27 @@ class Resistor(Passive2NodeElement):
 #@-node:etihwnad.20060605200356.24:class Resistor
 #@-node:etihwnad.20060605211347:classes
 #@+node:etihwnad.20060609195838.1:helpers
+#@+node:etihwnad.20060612075426:unit
+def unit(s):
+    """Takes a string and returns the equivalent float.
+    3.0u -> 3.0e-6"""
+
+    mult={'t':1.0e12,
+          'g':1.0e9,
+          'meg':1.0e6,
+          'k':1.0e3,
+          'mil':25.4e-6,
+          'm':1.0e-3,
+          'u':1.0e-6,
+          'n':1.0e-9,
+          'p':1.0e-12,
+          'f':1.0e-15}
+    m=re.search('^([0-9e\+\-\.]+)(t|g|meg|k|mil|m|u|n|p|f)?',s.lower())
+    if m.group(2):
+        return float(m.group(1))*mult[m.group(2)]
+    else:
+        return float(m.group(1))
+#@-node:etihwnad.20060612075426:unit
 #@+node:etihwnad.20060605200356.27:debug
 def debug(message):
     """Print debugging info to stderr."""
@@ -811,11 +832,9 @@ def main():
     _opt=opt
     
     import textwrap
-    print>>ofp,textwrap.dedent("""\
-        * spice_combine processed file
-        * by Dan White <etihwnad at gmail dot com>
-        * mail me bug reports, fixes, and comments if you find this useful
-        * ----------------------------------------------------------------""")
+    print>>ofp,"* pyspice.py: by Dan White <etihwnad at gmail dot com>"
+    print>>ofp,"* mail me bug reports, fixes, and comments if you find this useful"
+    print>>ofp,"* ----------------------------------------------------------------"
 
     netlist = read_netlist(ifp)
     nlist_new=classify(netlist)

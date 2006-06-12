@@ -16,9 +16,10 @@ expanded="etihwnad.20060605211347,"><vh>@thin pyspice.py</vh></v>
 </vnodes>
 <tnodes>
 <t tx="etihwnad.20060606092308"></t>
-<t tx="etihwnad.20060609200417">replace:
+<t tx="etihwnad.20060609200417">DONE ?
+replace:
     self.value = float(line[x])
 with:
-    self.value = mult2float(line[x])</t>
+    self.value = unit(line[x])</t>
 </tnodes>
 </leo_file>
