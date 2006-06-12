@@ -290,6 +290,7 @@ class Passive2NodeElement(SpiceElement):
         s=StringIO()
         print>>s, self.line[0],self.n1,self.n2,self.value,
         for k,v in self.param.iteritems():
+            if v==0: continue
             print>>s, k+'='+str(v),
         return wrapper.fill(s.getvalue())
     #@-node:etihwnad.20060605200356.13:__str__
@@ -389,6 +390,7 @@ class Mosfet(SpiceElement):
         s=StringIO()
         print>>s, self.line[0], self.d, self.g, self.s, self.b, self.model,
         for k,v in self.param.iteritems():
+            if v==0: continue
             print>>s, k+'='+str(v),
         return wrapper.fill(s.getvalue())
     #@-node:etihwnad.20060605200356.21:__str__
@@ -421,8 +423,13 @@ class Mosfet(SpiceElement):
             #combine iff W/L (for original FET) is same also
             if self.w==other.w and self.l==other.l:
                 for k,v in other.param.iteritems():
-                    if k=='w' or k=='l': continue
+                    if k=='w' or k=='l' or k=='m': continue
                     self.param[k]+=v
+                if ('m' in self.param.keys()) or ('m' in other.param.keys()):
+                    #add other's M parameter or increment
+                    self.param['m']+=other.param.get('m',1)
+                else:
+                    self.param['m']=2
                 _ncombine_mosfets+=1
                 return True
         else:
@@ -450,8 +457,7 @@ class Resistor(Passive2NodeElement):
 #@+node:etihwnad.20060612075426:unit
 def unit(s):
     """Takes a string and returns the equivalent float.
-    3.0u -> 3.0e-6"""
-
+    '3.0u' -> 3.0e-6"""
     mult={'t':1.0e12,
           'g':1.0e9,
           'meg':1.0e6,
@@ -859,7 +865,7 @@ def main():
     #python2.4 specific operation
     all.sort(cmp=lambda x,y: cmp(x.num,y.num))
     for x in all:
-        print x
+        print>>ofp,x
 #@-node:etihwnad.20060605200356.37:main
 #@-others
 
