@@ -117,6 +117,7 @@ mosfets=[]
 #global variables
 _counts=dict() #keyed by spice element letter
 _ncombine_capacitors=0
+_ncombine_inductors=0
 _ncombine_mosfets=0
 _ncombine_res=0
 
@@ -359,6 +360,52 @@ class Capacitor(Passive2NodeElement):
     #@-node:etihwnad.20060605200356.18:combine
     #@-others
 #@-node:etihwnad.20060605200356.15:class Capacitor
+#@+node:etihwnad.20060612195947:class Inductor
+
+class Capacitor(Passive2NodeElement):
+    """Assumes SPICE element line:
+
+    cXXX n1 n2 value p1=val p2=val ...
+    Provides:
+        isparallel(other)
+        combine(other)
+    """
+    #@	@+others
+    #@+node:etihwnad.20060612195947.1:__init__
+    def __init__(self,line,num):
+        Passive2NodeElement.__init__(self,line,num)
+        self.type='inductor'
+    #@-node:etihwnad.20060612195947.1:__init__
+    #@+node:etihwnad.20060612195947.2:isparallel
+    def isparallel(self,other):
+        """Returns True if instance is parallel with other instance
+        """
+        if self.n1==other.n1 and self.n2==other.n2:
+            return True
+        elif self.n1==other.n2 and self.n2==other.n1:
+            return True
+        else:
+            return False
+    #@-node:etihwnad.20060612195947.2:isparallel
+    #@+node:etihwnad.20060612195947.3:combine
+    def combine(self,other):
+        """Combines values if inductors are in parallel, returns True if
+        it combined them.
+    
+        NOTE:
+         -Does not currently touch param dictionary when combining,
+          just the values.  How should this be done?
+        """
+        global _ncombine_inductors
+        if self.isparallel(other):
+            self.value=(self.value*other.value)/(self.value+other.value)
+            _ncombine_inductors+=1
+            return True
+        else:
+            return False
+    #@-node:etihwnad.20060612195947.3:combine
+    #@-others
+#@-node:etihwnad.20060612195947:class Inductor
 #@+node:etihwnad.20060605200356.19:class Mosfet
 
 class Mosfet(SpiceElement):
@@ -598,7 +645,7 @@ def read_netlist(fname):
     re_param=re.compile(r"(\S*)\s*=\s*(\S*)") 
     for line in ifp:
         line=line.strip('\r\n')
-         #pass through empty lines and comments
+        #pass through empty lines and comments
         if not len(line.split()):
             #convert empty line to comment
             lines.append('*')
@@ -640,6 +687,9 @@ def classify(net):
     
     net - list of unwrapped SPICE netlist lines
     """
+    # Is there a better (faster) way of doing this?  Maybe generating a dict
+    # of handler functions and calling based on the first character.  At any
+    # rate, it would make the classification a constant-time operation.
     import string
     elements=dict()
     global _counts
@@ -652,36 +702,33 @@ def classify(net):
         num+=1
         arr=line.split()
         x=arr[0][0]
-        ##
+
         # Comment
-        ##
         if x=='*':
             elements[x].append(CommentLine(line,num))
             _counts[x]+=1
-        ##
+
         # Control line
-        ##
         elif x=='.':
             elements[x].append(ControlElement(line,num))
             _counts[x]+=1
+
         elif x=='a':
             elements[x].append(SpiceElement(line,num))
             warning('',elm=arr[0],num=num)
-#            raise ElementError(x)
             _counts[x]+=1
+
         elif x=='b':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
-        ##
+
         # Capacitor
-        ##
         elif x=='c':
             elm=Capacitor(line,num)
             #don't combine if it's the first encountered
             if _counts[x]==0:
                 elements[x].append(elm)
-#                capacitors.append(elm)
             else:
                 #combine if parallel or add if unique
                 if elements[x][-1].combine(elm):
@@ -689,51 +736,63 @@ def classify(net):
                 else:
                     elements[x].append(elm)
             _counts[x]+=1
+
         elif x=='d':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='e':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='f':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='g':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='h':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
-        ##
+
         # Current Source
-        ##
         elif x=='i':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='j':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='k':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
-        ##
+
         # Inductor
-        ##
         elif x=='l':
-            elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            elm=Inductor(line,num)
+            #don't combine if it's the first encountered
+            if _counts[x]==0:
+                elements[x].append(elm)
+            else:
+                #combine if parallel or add if unique
+                if elements[x][-1].combine(elm):
+                    pass
+                else:
+                    elements[x].append(elm)
             _counts[x]+=1
-        ##
+
         # Mosfet
-        ##
         elif x=='m':
             elm=Mosfet(line,num)
             if _counts[x]==0:
@@ -742,7 +801,7 @@ def classify(net):
                 mosfets.append(elm)
             else:
                 #search list backwards to find a parallel one
-                #in case they aren't adjacent
+                #in case they aren't adjacent, faster?
                 i=len(elements[x])-1
                 while i>=0:
                     if elements[x][i].combine(elm):
@@ -753,71 +812,81 @@ def classify(net):
                 if i==-1:
                     elements[x].append(elm)
             _counts['m']+=1
+
         elif x=='n':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='o':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='p':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='q':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
-        ##
+
         # Resistor
-        ##
         elif x=='r':
             elm=Resistor(line,num)
             elements[x].append(elm)
             _counts['r']+=1
+
         elif x=='s':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='t':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='u':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
-        ##
+
         # Voltage Source
-        ##
         elif x=='v':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='w':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
-        ##
+
         # Subcircuit
-        ##
         elif x=='x':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='y':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='z':
             elements[x].append(SpiceElement(line,num))
             raise ElementError(x)
             _counts[x]+=1
+
         elif x=='+':
             raise Error('No line continuations (+) allowed.')
+
         else:
             raise Error('Encountered unknown element: '+line)
+
     #add 'special' elements to netlist
     #debugging/information header
     print>>ofp,'* Input Element counts'
