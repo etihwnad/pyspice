@@ -44,7 +44,7 @@ functionality wasn't what I needed.
 #@nl
 #@+others
 #@+node:etihwnad.20060605202632:structures
- Data structures: (inaccurate)
+ Data structures: (outdated)
   lines - list of tuples: (original_line, line.split(), line_type)
   caps  - dictionary of node pairs and capacitance between nodes
 #@-node:etihwnad.20060605202632:structures
@@ -58,6 +58,7 @@ xpreserve comments in position
     -e-source (VCVS)
 -preserve node namespaces (within subckts, libraries, etc.)
     -find illegal SPICE node name character to prepend namespace
+     e.g. @sub1.node1
 -handle control statements specially
     -.model
     -.dc, .ac, .tran
@@ -74,7 +75,25 @@ xpreserve comments in position
     -.alter blocks
     -.end
     -others?
-#@nonl
+-option to find/evaluate .param statements?
+    -HSPICE takes params, ngspice doesn't
+    -logic to find when an explicit number is specified (e.g. 10k) or
+     when it it a parameter (e.g. 'value')
+    -create dict of .params and use as substitution keys in:
+        k=v model parameters
+        node names
+        element values (Rxx n1 n2 'value'; Cxx n1 n2 'fc/2')
+        others?
+-option to make a single output (inline everything):
+    .lib statements
+    .include statements
+    .model statements
+    others?
+-store node dictionary to keep track of elements connected to that node
+    -allows tracking of R-C nodes to drop C or R based on time constant
+    -allows more sophisticated dropping/combining with series elements
+        specifically R+R+R+R chains -> equivalent R+- (roughly) for faster sims
+                      C C C                        C
 #@-node:etihwnad.20060605202632.1:todo
 #@-others
 """
@@ -206,7 +225,7 @@ class SpiceElement:
     """
     #@	@+others
     #@+node:etihwnad.20060605200356.4:__init__
-    def __init__(self,line,num):
+    def __init__(self,line,num=None):
         """SpiceElement constructor
         line - netlist expanded line
         type - first 'word'
@@ -291,6 +310,7 @@ class Passive2NodeElement(SpiceElement):
         s=StringIO()
         print>>s, self.line[0],self.n1,self.n2,self.value,
         for k,v in self.param.iteritems():
+            #are there instances when 0 is significant?
             if v==0: continue
             print>>s, k+'='+str(v),
         return wrapper.fill(s.getvalue())
@@ -299,6 +319,10 @@ class Passive2NodeElement(SpiceElement):
     def drop(self,val=0.0,mode='<'):
         """Indicate whether to drop the element from the list.
         Occurs iff (val 'mode' self.value)
+        
+        Can this be converted to specifying an arbitrary binary function?
+          This may allow a more elegant comparison.
+          e.g. mode=< instead of mode='<' or mode=cap_smaller(x,y)
         """
         if mode=='<':
             if self.value<val: return True
@@ -346,9 +370,9 @@ class Capacitor(Passive2NodeElement):
         """Adds values if capacitors are in parallel, returns True if
         it combined them.
     
-        NOTE:
-         -Does not currently touch param dictionary when combining,
-          just the values.  How should this be done?
+        NOTE: Does not currently touch param dictionary when combining,
+          just the values.  How should this be done?  Maybe combine iff
+          params are identical to avoid problems?
         """
         global _ncombine_capacitors
         if self.isparallel(other):
@@ -461,9 +485,16 @@ class Mosfet(SpiceElement):
     #@+node:etihwnad.20060605200356.23:combine
     def combine(self,other):
         """Combines adds other to self iff the transistors are identical,
-        will NOT combine if W/L is different.
+        will NOT combine if W/L is different.  Parameter 'M' is incremented on
+        self, other is left alone.
     
-        Returns True if it combined the transistors
+        Returns True if it combined the transistors.
+        
+        Increments global _ncombine_mosfets for information.
+        
+        NOTE: This currently merely adds the parameters (except w, l, and m)
+        without regard to their meaning.  Here is the place to specially handle
+        certain FET parameters.
         """
         global _ncombine_mosfets
         if self.isparallel(other):
@@ -720,7 +751,7 @@ def classify(net):
 
         elif x=='b':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         # Capacitor
@@ -739,43 +770,43 @@ def classify(net):
 
         elif x=='d':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='e':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='f':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='g':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='h':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         # Current Source
         elif x=='i':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='j':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='k':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         # Inductor
@@ -815,22 +846,22 @@ def classify(net):
 
         elif x=='n':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='o':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='p':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='q':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         # Resistor
@@ -841,44 +872,44 @@ def classify(net):
 
         elif x=='s':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='t':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='u':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         # Voltage Source
         elif x=='v':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='w':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         # Subcircuit
         elif x=='x':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='y':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='z':
             elements[x].append(SpiceElement(line,num))
-            raise ElementError(x)
+            warning('',elm=arr[0],num=num)
             _counts[x]+=1
 
         elif x=='+':
@@ -894,6 +925,7 @@ def classify(net):
         if v!=0: print>>ofp, '*',k,'-',v
     #return classified netlist
     return elements
+
 #@-node:etihwnad.20060605200356.35:classify
 #@+node:etihwnad.20060605200356.37:main
 ####
@@ -932,6 +964,7 @@ def main():
             all.append(elm)
 
     #python2.4 specific operation
+    #sort netlist by order of appearance in orig. netlist
     all.sort(cmp=lambda x,y: cmp(x.num,y.num))
     for x in all:
         print>>ofp,x
