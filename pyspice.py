@@ -170,21 +170,24 @@ def options(args=sys.argv):
     from the output of layout extractors by combining parallel C's and
     FET's.  More features added upon request."""
     parser = OptionParser(usage=usage,description=desc)
-    parser.add_option('-i',dest='infile',default='stdin',
+    parser.add_option('-i','--infile',dest='infile',default='stdin',
                       help='Input SPICE file to be processed'
                            ', (default: %default)')
-    parser.add_option('-o',dest='outfile',default='stdout',
+    parser.add_option('-o','--outifle',dest='outfile',default='stdout',
                       help='Output file for changes'
                            ', (default: %default)')
-    parser.add_option('-d',dest='dropcap',
+    parser.add_option('-d','--dropcap',dest='dropcap',
                       default='10', metavar='X',
                       help='Drop all capacitors smaller than X fF'
                            ', (default: %default)')
-    parser.add_option('-v',dest='v',action='store_true',
+    parser.add_option('-v','--verbose',dest='v',action='store_true',
                       default=True,
                       help='Show info and debugging messages (default)')
-    parser.add_option('-q',dest='v',action='store_false',
+    parser.add_option('-q','--quiet',dest='v',action='store_false',
                       help='Suppress all messages on stderr')
+    parser.add_option('-w','--linewidth',dest='linewidth', default=75,
+                      help='Max. line width for netlist (default: %default)')
+
     (opt, args) = parser.parse_args()
     #infile
     if opt.infile=='stdin':
@@ -939,6 +942,9 @@ def main():
     _opt=opt
     
     import textwrap
+    #set line continuation style and max width
+    wrapper=textwrap.TextWrapper(subsequent_indent='+ ',width=opt.linewidth)
+
     print>>ofp,"* pyspice.py: by Dan White <etihwnad at gmail dot com>"
     print>>ofp,"* mail me bug reports, fixes, and comments if you find this useful"
     print>>ofp,"* ----------------------------------------------------------------"
