@@ -389,7 +389,7 @@ class Capacitor(Passive2NodeElement):
 #@-node:etihwnad.20060605200356.15:class Capacitor
 #@+node:etihwnad.20060612195947:class Inductor
 
-class Capacitor(Passive2NodeElement):
+class Inductor(Passive2NodeElement):
     """Assumes SPICE element line:
 
     cXXX n1 n2 value p1=val p2=val ...
