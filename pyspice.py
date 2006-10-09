@@ -29,17 +29,9 @@ modifying it for my needs.
 #@+node:etihwnad.20060605201903:<< copyright >>
 Copyright Dan White 2006
 
-Licensed by the GPL, see http://www.whiteaudio.com/soft/COPYING for details.
+Licensed by the GPL, see http://www.whiteaudio.com/soft/COPYING or the current
+GNU GPL license for details.
 
-Some non-binding requests, however:
-    -Send an email to the author <etihwnad AT gmail DOT com> if you
-     find this useful.
-    -Send improvements back to maybe turn this into a full python module
-Basically, I just want to see if this is useful to anyone else besides myself
-and conrtibute back to the python (and SPICE) community.  I found John
-Sheahan's spicepp Perl script a great help and wrote this when its
-functionality wasn't what I needed.
-#@nonl
 #@-node:etihwnad.20060605201903:<< copyright >>
 #@nl
 #@+others
@@ -219,6 +211,7 @@ def options(args=sys.argv):
 #@-node:etihwnad.20060609195838:Option processing
 #@+node:etihwnad.20060605211347:classes
 #@+node:etihwnad.20060605200356.3:class SpiceElement
+
 class SpiceElement:
     """Base class for SPICE elements.
     Methods:

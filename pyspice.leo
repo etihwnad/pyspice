@@ -9,8 +9,8 @@
 <find_panel_settings/>
 <vnodes>
 <v t="etihwnad.20060606092308" a="E"><vh>Notes</vh></v>
-<v t="etihwnad.20060606092308.1" a="EV"
-expanded="etihwnad.20060605211347,"><vh>@thin pyspice.py</vh></v>
+<v t="etihwnad.20060606092308.1" a="ETV"
+expanded="etihwnad.20060605200356.2,etihwnad.20060609195838,etihwnad.20060605211347,"><vh>@thin pyspice.py</vh></v>
 </vnodes>
 <tnodes>
 <t tx="etihwnad.20060606092308"></t>
