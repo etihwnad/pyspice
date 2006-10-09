@@ -45,8 +45,8 @@ TODO:
 xpreserve comments in position
 -element class definitions
     -inductor
-    -v-source
-    -i-source
+    xv-source
+    xi-source
     -e-source (VCVS)
 -preserve node namespaces (within subckts, libraries, etc.)
     -find illegal SPICE node name character to prepend namespace
@@ -210,6 +210,7 @@ def options(args=sys.argv):
 #@-node:etihwnad.20060605200356.36:options
 #@-node:etihwnad.20060609195838:Option processing
 #@+node:etihwnad.20060605211347:classes
+#@+node:dan.20061008213431:base classes
 #@+node:etihwnad.20060605200356.3:class SpiceElement
 
 class SpiceElement:
@@ -245,35 +246,6 @@ class SpiceElement:
     #@-node:etihwnad.20060605200356.6:drop
     #@-others
 #@-node:etihwnad.20060605200356.3:class SpiceElement
-#@+node:etihwnad.20060605200356.7:class CommentLine
-
-class CommentLine(SpiceElement):
-    """SPICE Comment line (/^\*.*/)
-    """
-    #@	@+others
-    #@+node:etihwnad.20060605200356.8:__init__
-    def __init__(self,line,num):
-        SpiceElement.__init__(self,line,num)
-        self.type='comment'
-    #@-node:etihwnad.20060605200356.8:__init__
-    #@-others
-#@-node:etihwnad.20060605200356.7:class CommentLine
-#@+node:etihwnad.20060605200356.9:class ControlElement
-
-class ControlElement(SpiceElement):
-    """Control statement object, no processing for now.
-    
-    Note: currently has no knowledge of blocks (.lib/.endl, .subckt/.ends)
-    has only ONE node namespace, make sure subckt's have unique node names!
-    """
-    #@	@+others
-    #@+node:etihwnad.20060605200356.10:__init__
-    def __init__(self,line,num):
-        SpiceElement.__init__(self,line,num)
-        self.type='control'
-    #@-node:etihwnad.20060605200356.10:__init__
-    #@-others
-#@-node:etihwnad.20060605200356.9:class ControlElement
 #@+node:etihwnad.20060605200356.11:class Passive2NodeElement
 
 class Passive2NodeElement(SpiceElement):
@@ -306,8 +278,8 @@ class Passive2NodeElement(SpiceElement):
         s=StringIO()
         print>>s, self.line[0],self.n1,self.n2,self.value,
         for k,v in self.param.iteritems():
-            #are there instances when 0 is significant?
-            if v==0: continue
+            #are there instances when 0 is (in)significant?
+            #if v==0: continue
             print>>s, k+'='+str(v),
         return wrapper.fill(s.getvalue())
     #@-node:etihwnad.20060605200356.13:__str__
@@ -334,6 +306,117 @@ class Passive2NodeElement(SpiceElement):
     #@-node:etihwnad.20060605200356.14:drop
     #@-others
 #@-node:etihwnad.20060605200356.11:class Passive2NodeElement
+#@+node:dan.20061008213532:class Active2NodeElement
+
+class Active2NodeElement(SpiceElement):
+    """Base class for active 2-node elements.
+    Assumes SPICE element line:
+    xXXX n1 n2 value p1=val p2=val ...
+    Inherits:
+        None
+    Redefines:
+        None
+    """
+    #@	@+others
+    #@+node:dan.20061008213532.1:__init__
+    def __init__(self,line,num):
+        if isinstance(line,str):
+            line=line.split()
+        self.line=line
+        self.type='active2'
+        self.num=num
+        self.n1=_current_scope+line[1]
+        self.n2=_current_scope+line[2]
+        self.value=unit(line[3])
+        self.param=dict() #store x=y as dictionary
+        for p in line[4:]:
+            k,v=p.split('=')
+            self.param[k]=unit(v)
+    #@-node:dan.20061008213532.1:__init__
+    #@+node:dan.20061008213532.2:__str__
+    def __str__(self):
+        s=StringIO()
+        print>>s, self.line[0],self.n1,self.n2,self.value,
+        for k,v in self.param.iteritems():
+            #are there instances when 0 is (in)significant?
+            #if v==0: continue
+            print>>s, k+'='+str(v),
+        return wrapper.fill(s.getvalue())
+    #@-node:dan.20061008213532.2:__str__
+    #@-others
+#@-node:dan.20061008213532:class Active2NodeElement
+#@+node:dan.20061008214054:class Active4NodeElement
+
+class Active4NodeElement(SpiceElement):
+    """Base class for active 4-node elements (xCyS).
+    Assumes SPICE element line:
+    xXXX n1 n2 value p1=val p2=val ...
+    Inherits:
+        None
+    Redefines:
+        None
+    """
+    #@	@+others
+    #@+node:dan.20061008214054.1:__init__
+    def __init__(self,line,num):
+        if isinstance(line,str):
+            line=line.split()
+        self.line=line
+        self.type='active4'
+        self.num=num
+        self.n1=_current_scope+line[1]
+        self.n2=_current_scope+line[2]
+        self.n3=_current_scope+line[3]
+        self.n4=_current_scope+line[4]
+        self.value=unit(line[5])
+        self.param=dict() #store x=y as dictionary
+        for p in line[6:]:
+            k,v=p.split('=')
+            self.param[k]=unit(v)
+    #@-node:dan.20061008214054.1:__init__
+    #@+node:dan.20061008214054.2:__str__
+    def __str__(self):
+        s=StringIO()
+        print>>s, self.line[0],self.n1,self.n2,self.n3,self.n4,self.value,
+        for k,v in self.param.iteritems():
+            #are there instances when 0 is (in)significant?
+            #if v==0: continue
+            print>>s, k+'='+str(v),
+        return wrapper.fill(s.getvalue())
+    #@-node:dan.20061008214054.2:__str__
+    #@-others
+#@-node:dan.20061008214054:class Active4NodeElement
+#@-node:dan.20061008213431:base classes
+#@+node:dan.20061008213431.1:element classes
+#@+node:etihwnad.20060605200356.7:class CommentLine
+
+class CommentLine(SpiceElement):
+    """SPICE Comment line (/^\*.*/)
+    """
+    #@	@+others
+    #@+node:etihwnad.20060605200356.8:__init__
+    def __init__(self,line,num):
+        SpiceElement.__init__(self,line,num)
+        self.type='comment'
+    #@-node:etihwnad.20060605200356.8:__init__
+    #@-others
+#@-node:etihwnad.20060605200356.7:class CommentLine
+#@+node:etihwnad.20060605200356.9:class ControlElement
+
+class ControlElement(SpiceElement):
+    """Control statement object, no processing for now.
+    
+    Note: currently has no knowledge of blocks (.lib/.endl, .subckt/.ends)
+    has only ONE node namespace, make sure subckt's have unique node names!
+    """
+    #@	@+others
+    #@+node:etihwnad.20060605200356.10:__init__
+    def __init__(self,line,num):
+        SpiceElement.__init__(self,line,num)
+        self.type='control'
+    #@-node:etihwnad.20060605200356.10:__init__
+    #@-others
+#@-node:etihwnad.20060605200356.9:class ControlElement
 #@+node:etihwnad.20060605200356.15:class Capacitor
 
 class Capacitor(Passive2NodeElement):
@@ -526,6 +609,37 @@ class Resistor(Passive2NodeElement):
     #@-node:etihwnad.20060605200356.25:__init__
     #@-others
 #@-node:etihwnad.20060605200356.24:class Resistor
+#@+node:dan.20061008213903:class Vsource
+
+class Vsource(Active2NodeElement):
+    """Assumes SPICE element line:
+
+    vXXX n1 n2 value p1=val p2=val ...
+    """
+    #@	@+others
+    #@+node:dan.20061008213903.1:__init__
+    def __init__(self,line,num):
+        Active2NodeElement.__init__(self,line,num)
+        self.type='vsource'
+    #@-node:dan.20061008213903.1:__init__
+    #@-others
+#@-node:dan.20061008213903:class Vsource
+#@+node:dan.20061008213936:class Isource
+
+class Isource(Active2NodeElement):
+    """Assumes SPICE element line:
+
+    iXXX n1 n2 value p1=val p2=val ...
+    """
+    #@	@+others
+    #@+node:dan.20061008213936.1:__init__
+    def __init__(self,line,num):
+        Active2NodeElement.__init__(self,line,num)
+        self.type='isource'
+    #@-node:dan.20061008213936.1:__init__
+    #@-others
+#@-node:dan.20061008213936:class Isource
+#@-node:dan.20061008213431.1:element classes
 #@-node:etihwnad.20060605211347:classes
 #@+node:etihwnad.20060609195838.1:helpers
 #@+node:etihwnad.20060612075426:unit
