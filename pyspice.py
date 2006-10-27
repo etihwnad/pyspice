@@ -9,7 +9,7 @@
 """
 #@<< head >>
 #@+node:etihwnad.20060605202504:<< head >>
-pyspice.py v0.1
+pyspice.py v0.2
 
 SPICE pre-processor that combines parallel elements (e.g. capacitors, mosfets)
 for GREATLY reduced simulation time.  Uses the 'M' parameter of MOSFETS
@@ -34,6 +34,35 @@ GNU GPL license for details.
 
 #@-node:etihwnad.20060605201903:<< copyright >>
 #@nl
+#@<< release notes >>
+#@+node:dan.20061011115934:<< release notes >>
+Release Notes, changelog, whatever it turns out as...
+-----------------------------------------------------
+#@+others
+#@+node:dan.20061011120652:v0.2
+pyspice.py v0.2:
+----------------
+-At least default (pass through) handling of all element types.
+NOTE: For combining, this uses a global node name scheme.  In other
+    words: subcircuits, libraries, etc. are not in a separate node
+    namespace as they should be, beware.
+-Changed structure of classes (in LEO), there are base classes that contain
+    common attributes and element classes that define the specific behavior.
+-This version _should_ work with any netlist and only touch M's and C's, YMMV.
+-Work is ongoing on the class structure and most important IMO is getting netlist
+    hierarchy implemented. 
+
+#@-node:dan.20061011120652:v0.2
+#@+node:dan.20061011120117:v0.1
+pyspice v0.1:
+-------------
+Initial release.
+Only worked for netlist containing MOSFETs and Capacitors.
+#@-node:dan.20061011120117:v0.1
+#@-others
+#@nonl
+#@-node:dan.20061011115934:<< release notes >>
+#@nl
 #@+others
 #@+node:etihwnad.20060605202632:structures
  Data structures: (outdated)
@@ -44,7 +73,7 @@ GNU GPL license for details.
 TODO:
 xpreserve comments in position
 -element class definitions
-    -inductor
+    xinductor
     xv-source
     xi-source
     -e-source (VCVS)
@@ -70,13 +99,13 @@ xpreserve comments in position
 -option to find/evaluate .param statements?
     -HSPICE takes params, ngspice doesn't
     -logic to find when an explicit number is specified (e.g. 10k) or
-     when it it a parameter (e.g. 'value')
+     when it is a parameter (e.g. 'value')
     -create dict of .params and use as substitution keys in:
         k=v model parameters
         node names
         element values (Rxx n1 n2 'value'; Cxx n1 n2 'fc/2')
         others?
--option to make a single output (inline everything):
+-option to make a flat output (inline everything):
     .lib statements
     .include statements
     .model statements
@@ -172,6 +201,10 @@ def options(args=sys.argv):
                       default='10', metavar='X',
                       help='Drop all capacitors smaller than X fF'
                            ', (default: %default)')
+    parser.add_option('--no-combine-c',dest='combine_c',action='store_false',
+                      default=True,help='Do not combine parallel capacitors')
+    parser.add_option('--no-combine-m',dest='combine_m',action='store_false',
+                      default=True,help='Do not combine parallel MOSFETs')
     parser.add_option('-v','--verbose',dest='v',action='store_true',
                       default=True,
                       help='Show info and debugging messages (default)')
@@ -205,12 +238,21 @@ def options(args=sys.argv):
     opt.dropcap=float(opt.dropcap)
     opt.dropcap=opt.dropcap*1e-15
     if opt.v: info('Dropping caps < '+str(opt.dropcap)+' F')
+    info("Combining c's:"+str(opt.combine_c))
+    info("Combining m's:"+str(opt.combine_m))
     #return the option object
     return opt
 #@-node:etihwnad.20060605200356.36:options
 #@-node:etihwnad.20060609195838:Option processing
 #@+node:etihwnad.20060605211347:classes
 #@+node:dan.20061008213431:base classes
+#@+at
+# These classes are used to break down the spectrum of SPICE elements
+# into 'classes' of elements.  I.e. 2 node passives, 2-node sources, 4-node 
+# sources,
+# and so on.  The elements found in a real netlist are based on these types.
+#@-at
+#@@c
 #@+node:etihwnad.20060605200356.3:class SpiceElement
 
 class SpiceElement:
@@ -242,6 +284,8 @@ class SpiceElement:
     #@-node:etihwnad.20060605200356.5:__str__
     #@+node:etihwnad.20060605200356.6:drop
     def drop(self,val=0,mode='<'):
+        """Template for dropping elements that defaults to NO if
+        not overidden in the element class"""
         return False
     #@-node:etihwnad.20060605200356.6:drop
     #@-others
@@ -388,6 +432,10 @@ class Active4NodeElement(SpiceElement):
 #@-node:dan.20061008214054:class Active4NodeElement
 #@-node:dan.20061008213431:base classes
 #@+node:dan.20061008213431.1:element classes
+#@+at
+# This is a(n incomplete) definition of the various SPICE elements.
+#@-at
+#@@c
 #@+node:etihwnad.20060605200356.7:class CommentLine
 
 class CommentLine(SpiceElement):
@@ -405,6 +453,7 @@ class CommentLine(SpiceElement):
 
 class ControlElement(SpiceElement):
     """Control statement object, no processing for now.
+    Note: this will eventially be a base class for the real control elements
     
     Note: currently has no knowledge of blocks (.lib/.endl, .subckt/.ends)
     has only ONE node namespace, make sure subckt's have unique node names!
@@ -573,7 +622,7 @@ class Mosfet(SpiceElement):
         
         NOTE: This currently merely adds the parameters (except w, l, and m)
         without regard to their meaning.  Here is the place to specially handle
-        certain FET parameters.
+        certain FET parameters.  Average certain parameters?
         """
         global _ncombine_mosfets
         if self.isparallel(other):
@@ -587,6 +636,7 @@ class Mosfet(SpiceElement):
                     self.param['m']+=other.param.get('m',1)
                 else:
                     self.param['m']=2
+                
                 _ncombine_mosfets+=1
                 return True
         else:
@@ -765,7 +815,6 @@ def read_netlist(fname):
     return:
         netlist (list) of SPICE netlist lines
     """
-    #@nonl
     #@-node:etihwnad.20060609200142:<< docstring >>
     #@nl
     #@    << imports >>
@@ -786,17 +835,21 @@ def read_netlist(fname):
     re_param=re.compile(r"(\S*)\s*=\s*(\S*)") 
     for line in ifp:
         line=line.strip('\r\n')
-        #pass through empty lines and comments
+        #pass through empty lines
         if not len(line.split()):
-            #convert empty line to comment
+            #convert empty line to comment as a placeholder
             lines.append('*')
             nline+=1
-            continue
+            continue #next please...
+        #pass through comments, they stay asis
         elif line[0]=='*':
             lines.append(line)
             nline+=1
-            continue
+            continue #next please...
+        #case is unimportant in SPICE
         line=line.lower()
+        #remove whitespace in parameter assignments
+        # to prepare for x.split(' ') that happens later:
         # 'as = 3e-12' => 'as=3e-12'
         line=re.sub(re_param,r'\1=\2',line)
         if line[0]!='+': #beginning of SPICE line
@@ -834,6 +887,8 @@ def classify(net):
     import string
     elements=dict()
     global _counts
+    global _opt
+    opt=_opt
     #initialize to all element types
     for ch in '*.'+string.lowercase:
         elements[ch]=[]
@@ -872,7 +927,7 @@ def classify(net):
                 elements[x].append(elm)
             else:
                 #combine if parallel or add if unique
-                if elements[x][-1].combine(elm):
+                if opt.combine_c and elements[x][-1].combine(elm):
                     pass
                 else:
                     elements[x].append(elm)
@@ -940,6 +995,9 @@ def classify(net):
                 #don't combine if it's the first encountered
                 elements[x].append(elm)
                 mosfets.append(elm)
+            elif not opt.combine_m:
+                #do not combine elements
+                elements[x].append(elm)
             else:
                 #search list backwards to find a parallel one
                 #in case they aren't adjacent, faster?
