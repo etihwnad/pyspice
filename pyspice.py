@@ -9,7 +9,7 @@
 """
 #@<< head >>
 #@+node:etihwnad.20060605202504:<< head >>
-pyspice.py v0.2
+pyspice.py v0.2a
 
 SPICE pre-processor that combines parallel elements (e.g. capacitors, mosfets)
 for GREATLY reduced simulation time.  Uses the 'M' parameter of MOSFETS
@@ -39,6 +39,12 @@ GNU GPL license for details.
 Release Notes, changelog, whatever it turns out as...
 -----------------------------------------------------
 #@+others
+#@+node:dan.20061111103052:v0.2a
+pyspice.py v0.2a:
+----------------
+-added a missing newline before an import statement
+
+#@-node:dan.20061111103052:v0.2a
 #@+node:dan.20061011120652:v0.2
 pyspice.py v0.2:
 ----------------
@@ -253,6 +259,93 @@ def options(args=sys.argv):
 # and so on.  The elements found in a real netlist are based on these types.
 #@-at
 #@@c
+#@+node:dan.20061229140222:class Netlist
+
+class Netlist:
+    """Base class that holds a netlist.
+    
+    Notes:
+        -this will eventually hold the entire shebang
+        -providing __init__ with a file name will:
+            -read in netlist
+            -classify the lines
+            -take care of hierarchy
+            -source other files
+    """
+    #@    @+others
+    #@+node:dan.20061229141817:__init__
+    def __init__(self,fname=None):
+        """Optionally reads a netlist from a file"""
+        lines = []
+        if fname:
+            self.readfile(fname)
+    #@-node:dan.20061229141817:__init__
+    #@+node:dan.20061229142604:add_line
+    def add_line(self,line):
+        """TODO add_line docstring"""
+        
+    #@nonl
+    #@-node:dan.20061229142604:add_line
+    #@+node:dan.20061229141501:readfile
+    def readfile(self,fname):
+        """Read a SPICE netlist from the open file pointer
+    
+        readfile(filename) -> array lines
+        
+        Returns a list of expanded lines (without continuation '+')
+        Keeps case of comments, all other lines are lowercased
+        
+        return:
+            netlist (list) of SPICE netlist lines
+        
+        Notes:
+            -we need to read at least a full line with continuations before we can
+             add the line to the netlist
+        """
+        import re
+        
+        if isinstance(fname,file):
+            ifp=fname
+        else:
+            ifp=open(fname,'rU')
+        nline=0
+        #finds a "name = value" pair for shrinking
+        re_param=re.compile(r"(\S*)\s*=\s*(\S*)") 
+        for line in ifp:
+            line=line.strip('\r\n') #handles any type of line ending
+            if not len(line.split()): #pass through empty lines
+                self.lines.append('*') #convert empty line to comment as a placeholder
+                nline+=1
+                continue
+            #pass through comments, they stay as-is
+            elif line[0]=='*':
+                self.lines.append(line)
+                nline+=1
+                continue #next please...
+            #case is unimportant in SPICE
+            line=line.lower()
+            #remove whitespace in parameter assignments
+            # to prepare for x.split(' ') that happens later:
+            # 'as = 3e-12' => 'as=3e-12'
+            line=re.sub(re_param,r'\1=\2',line)
+            if line[0]!='+': #beginning of SPICE line
+                lines.append(line)
+                nline+=1
+            else:            #line continuation
+                line=line[1:]
+                lines[-1]=lines[-1]+line
+        return lines
+    #@nonl
+    #@-node:dan.20061229141501:readfile
+    #@+node:dan.20061229142423:classify
+    def classify(self,line=None):
+        """Takes a line and creates an appropriate SpiceElement"""
+        
+    #@nonl
+    #@-node:dan.20061229142423:classify
+    #@-others
+#@nonl
+#@-node:dan.20061229140222:class Netlist
 #@+node:etihwnad.20060605200356.3:class SpiceElement
 
 class SpiceElement:
@@ -430,6 +523,20 @@ class Active4NodeElement(SpiceElement):
     #@-node:dan.20061008214054.2:__str__
     #@-others
 #@-node:dan.20061008214054:class Active4NodeElement
+#@+node:etihwnad.20060605200356.32:class ElementError
+
+class ElementError(LookupError):
+    #@	@+others
+    #@+node:etihwnad.20060605200356.33:__init__
+    def __init__(self,elm='???'):
+        self.elm=elm
+    #@-node:etihwnad.20060605200356.33:__init__
+    #@+node:etihwnad.20060605200356.34:__str__
+    def __str__(self):
+        return str('No class defined for this element: '+self.elm)
+    #@-node:etihwnad.20060605200356.34:__str__
+    #@-others
+#@-node:etihwnad.20060605200356.32:class ElementError
 #@-node:dan.20061008213431:base classes
 #@+node:dan.20061008213431.1:element classes
 #@+at
@@ -860,20 +967,6 @@ def read_netlist(fname):
             lines[-1]=lines[-1]+line
     return lines
 #@-node:etihwnad.20060605200356.31:read_netlist
-#@+node:etihwnad.20060605200356.32:class ElementError
-
-class ElementError(LookupError):
-    #@	@+others
-    #@+node:etihwnad.20060605200356.33:__init__
-    def __init__(self,elm='???'):
-        self.elm=elm
-    #@-node:etihwnad.20060605200356.33:__init__
-    #@+node:etihwnad.20060605200356.34:__str__
-    def __str__(self):
-        return str('No class defined for this element: '+self.elm)
-    #@-node:etihwnad.20060605200356.34:__str__
-    #@-others
-#@-node:etihwnad.20060605200356.32:class ElementError
 #@+node:etihwnad.20060605200356.35:classify
 def classify(net):
     """Reads expanded netlist and classifies each line,
