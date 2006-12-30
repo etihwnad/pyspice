@@ -11,7 +11,7 @@
 <vnodes>
 <v t="etihwnad.20060606092308" a="E"><vh>Notes</vh></v>
 <v t="etihwnad.20060606092308.1" a="E"
-expanded="dan.20061011115934,etihwnad.20060609195838,etihwnad.20060605211347,dan.20061008213431,dan.20061229140222,"><vh>@thin pyspice.py</vh></v>
+expanded="dan.20061011115934,etihwnad.20060605211347,dan.20061229140222,dan.20061008213431.1,"><vh>@thin pyspice.py</vh></v>
 </vnodes>
 <tnodes>
 <t tx="etihwnad.20060606092308"></t>

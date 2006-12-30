@@ -251,19 +251,10 @@ def options(args=sys.argv):
 #@-node:etihwnad.20060605200356.36:options
 #@-node:etihwnad.20060609195838:Option processing
 #@+node:etihwnad.20060605211347:classes
-#@+node:dan.20061008213431:base classes
-#@+at
-# These classes are used to break down the spectrum of SPICE elements
-# into 'classes' of elements.  I.e. 2 node passives, 2-node sources, 4-node 
-# sources,
-# and so on.  The elements found in a real netlist are based on these types.
-#@-at
-#@@c
 #@+node:dan.20061229140222:class Netlist
 
 class Netlist:
     """Base class that holds a netlist.
-    
     Notes:
         -this will eventually hold the entire shebang
         -providing __init__ with a file name will:
@@ -276,13 +267,22 @@ class Netlist:
     #@+node:dan.20061229141817:__init__
     def __init__(self,fname=None):
         """Optionally reads a netlist from a file"""
-        lines = []
+        self.lines = []
+        self.deck = []
         if fname:
             self.readfile(fname)
     #@-node:dan.20061229141817:__init__
+    #@+node:dan.20061229215859:add_element
+    def add_element(self,line):
+        """Takes a line (usually split on ' '), classifies it and adds the new
+        object to the netlist"""
+        self.deck.append( self.classify(line) )
+    #@nonl
+    #@-node:dan.20061229215859:add_element
     #@+node:dan.20061229142604:add_line
     def add_line(self,line):
         """TODO add_line docstring"""
+        self.lines.append(line)
         
     #@nonl
     #@-node:dan.20061229142604:add_line
@@ -308,44 +308,87 @@ class Netlist:
             ifp=fname
         else:
             ifp=open(fname,'rU')
-        nline=0
+        n=0
         #finds a "name = value" pair for shrinking
-        re_param=re.compile(r"(\S*)\s*=\s*(\S*)") 
-        for line in ifp:
-            line=line.strip('\r\n') #handles any type of line ending
-            if not len(line.split()): #pass through empty lines
-                self.lines.append('*') #convert empty line to comment as a placeholder
-                nline+=1
+        re_param=re.compile(r"(\S*)\s*=\s*(\S*)")
+        #read in whole file to a list of lines
+        
+        #
+        #
+        # NOTE:
+        #   This doesn't work yet, want to modify list in-place so we don't
+        #   need a copy to iterate over.  The purpose is to be able to
+        #   un-continue lines and just delete the continuation.
+        #
+        #
+        lines = ifp.readlines()
+        n = -1
+        for line in lines:
+            n += 1
+            line = line.strip('\r\n') #handles any type of line ending
+            #pass through empty lines
+            if not len(line.split()):
+                lines[n] = '*' #convert empty line to comment as a placeholder
                 continue
             #pass through comments, they stay as-is
             elif line[0]=='*':
-                self.lines.append(line)
-                nline+=1
-                continue #next please...
+                lines[n] = '*'
+                continue
             #case is unimportant in SPICE
-            line=line.lower()
+            line = line.lower()
             #remove whitespace in parameter assignments
-            # to prepare for x.split(' ') that happens later:
-            # 'as = 3e-12' => 'as=3e-12'
-            line=re.sub(re_param,r'\1=\2',line)
-            if line[0]!='+': #beginning of SPICE line
-                lines.append(line)
-                nline+=1
-            else:            #line continuation
-                line=line[1:]
-                lines[-1]=lines[-1]+line
-        return lines
-    #@nonl
+            # to prepare for x.split(' ') that happens next:
+            #  'as = 3e-12' => 'as=3e-12'
+            line = re.sub(re_param,r'\1=\2',line)
+            #handle line continuations
+            if line[0]=='+':
+                lines[-1].extend(line[1:].split())
+                del lines[n]
+            else:
+                lines[n] = line.split()
+        #read in file, now classify
+        self.deck.append(map(self.add_element,self.lines))
     #@-node:dan.20061229141501:readfile
     #@+node:dan.20061229142423:classify
-    def classify(self,line=None):
+    def classify(self,line):
         """Takes a line and creates an appropriate SpiceElement"""
-        
+        return elements.handler[line[0][0]](line)
     #@nonl
     #@-node:dan.20061229142423:classify
     #@-others
 #@nonl
 #@-node:dan.20061229140222:class Netlist
+#@+node:dan.20061229231842:class ElementHandlers
+class ElementHandlers:
+    #@    @+others
+    #@+node:dan.20061229231842.1:__init__
+    def __init__(self):
+        # the valid element types
+        valid_types = '*.abcdefghijklmnopqrstuvwxyz'
+        #setup default element handler
+        self.handler = dict()
+        for t in valid_types:
+            self.handler[t] = SpiceElement
+    #@nonl
+    #@-node:dan.20061229231842.1:__init__
+    #@+node:dan.20061229231842.2:add_handler
+    def add_handler(self,type,handler):
+        """Replaces the existing element object definition with the
+        given one"""
+        self.handler[type] = handler
+    #@nonl
+    #@-node:dan.20061229231842.2:add_handler
+    #@-others
+#@nonl
+#@-node:dan.20061229231842:class ElementHandlers
+#@+node:dan.20061008213431:base classes
+#@+at
+# These classes are used to break down the spectrum of SPICE elements
+# into 'classes' of elements.  I.e. 2 node passives, 2-node sources, 4-node 
+# sources,
+# and so on.  The elements found in a real netlist are based on these types.
+#@-at
+#@@c
 #@+node:etihwnad.20060605200356.3:class SpiceElement
 
 class SpiceElement:
@@ -360,20 +403,20 @@ class SpiceElement:
     def __init__(self,line,num=None):
         """SpiceElement constructor
         line - netlist expanded line
-        type - first 'word'
-        num  - netlist line number (for keeping roughly the same
+        type - first character
+        num  - input netlist line number (for keeping roughly the same
                order when printing modified netlist)
         """
         #accept lists of 'words' also; BE CAREFUL with this, though
-        if isinstance(line,list):
-            line=' '.join(line)
+        if isinstance(line,str):
+            line=line.split()
         self.line=line
-        self.type=line[0]
+        self.type=line[0][0]
         self.num=num
     #@-node:etihwnad.20060605200356.4:__init__
     #@+node:etihwnad.20060605200356.5:__str__
     def __str__(self):
-        return wrapper.fill(self.line)
+        return wrapper.fill(' '.join(self.line))
     #@-node:etihwnad.20060605200356.5:__str__
     #@+node:etihwnad.20060605200356.6:drop
     def drop(self,val=0,mode='<'):
@@ -397,11 +440,8 @@ class Passive2NodeElement(SpiceElement):
     #@	@+others
     #@+node:etihwnad.20060605200356.12:__init__
     def __init__(self,line,num):
-        if isinstance(line,str):
-            line=line.split()
-        self.line=line
+        SpiceElement.__init__(self,line,num)
         self.type='passive2'
-        self.num=num
         self.n1=_current_scope+line[1]
         self.n2=_current_scope+line[2]
         self.value=unit(line[3])
@@ -457,11 +497,8 @@ class Active2NodeElement(SpiceElement):
     #@	@+others
     #@+node:dan.20061008213532.1:__init__
     def __init__(self,line,num):
-        if isinstance(line,str):
-            line=line.split()
-        self.line=line
+        SpiceElement.__init__(self,line,num)
         self.type='active2'
-        self.num=num
         self.n1=_current_scope+line[1]
         self.n2=_current_scope+line[2]
         self.value=unit(line[3])
@@ -496,11 +533,8 @@ class Active4NodeElement(SpiceElement):
     #@	@+others
     #@+node:dan.20061008214054.1:__init__
     def __init__(self,line,num):
-        if isinstance(line,str):
-            line=line.split()
-        self.line=line
+        SpiceElement.__init__(self,line,num)
         self.type='active4'
-        self.num=num
         self.n1=_current_scope+line[1]
         self.n2=_current_scope+line[2]
         self.n3=_current_scope+line[3]
@@ -541,8 +575,14 @@ class ElementError(LookupError):
 #@+node:dan.20061008213431.1:element classes
 #@+at
 # This is a(n incomplete) definition of the various SPICE elements.
+# 
+# NOTE: When adding a new element type definition, be sure to add a handler
+#   for the new class after defining the class using:
+#       elements.add_handler('x',Xdevice)
 #@-at
 #@@c
+#make a repository for element handlers
+elements=ElementHandlers()
 #@+node:etihwnad.20060605200356.7:class CommentLine
 
 class CommentLine(SpiceElement):
@@ -555,6 +595,7 @@ class CommentLine(SpiceElement):
         self.type='comment'
     #@-node:etihwnad.20060605200356.8:__init__
     #@-others
+elements.add_handler('*',CommentLine)
 #@-node:etihwnad.20060605200356.7:class CommentLine
 #@+node:etihwnad.20060605200356.9:class ControlElement
 
@@ -572,6 +613,7 @@ class ControlElement(SpiceElement):
         self.type='control'
     #@-node:etihwnad.20060605200356.10:__init__
     #@-others
+elements.add_handler('.',ControlElement)
 #@-node:etihwnad.20060605200356.9:class ControlElement
 #@+node:etihwnad.20060605200356.15:class Capacitor
 
@@ -618,6 +660,7 @@ class Capacitor(Passive2NodeElement):
             return False
     #@-node:etihwnad.20060605200356.18:combine
     #@-others
+elements.add_handler('c',Capacitor)
 #@-node:etihwnad.20060605200356.15:class Capacitor
 #@+node:etihwnad.20060612195947:class Inductor
 
@@ -664,6 +707,7 @@ class Inductor(Passive2NodeElement):
             return False
     #@-node:etihwnad.20060612195947.3:combine
     #@-others
+elements.add_handler('l',Inductor)
 #@-node:etihwnad.20060612195947:class Inductor
 #@+node:etihwnad.20060605200356.19:class Mosfet
 
@@ -750,6 +794,7 @@ class Mosfet(SpiceElement):
             return False
     #@-node:etihwnad.20060605200356.23:combine
     #@-others
+elements.add_handler('m',Mosfet)
 #@-node:etihwnad.20060605200356.19:class Mosfet
 #@+node:etihwnad.20060605200356.24:class Resistor
 
@@ -765,6 +810,7 @@ class Resistor(Passive2NodeElement):
         self.type='resistor'
     #@-node:etihwnad.20060605200356.25:__init__
     #@-others
+elements.add_handler('r',Resistor)
 #@-node:etihwnad.20060605200356.24:class Resistor
 #@+node:dan.20061008213903:class Vsource
 
@@ -780,6 +826,7 @@ class Vsource(Active2NodeElement):
         self.type='vsource'
     #@-node:dan.20061008213903.1:__init__
     #@-others
+elements.add_handler('v',Vsource)
 #@-node:dan.20061008213903:class Vsource
 #@+node:dan.20061008213936:class Isource
 
@@ -795,6 +842,7 @@ class Isource(Active2NodeElement):
         self.type='isource'
     #@-node:dan.20061008213936.1:__init__
     #@-others
+elements.add_handler('i',Isource)
 #@-node:dan.20061008213936:class Isource
 #@-node:dan.20061008213431.1:element classes
 #@-node:etihwnad.20060605211347:classes
@@ -803,16 +851,16 @@ class Isource(Active2NodeElement):
 def unit(s):
     """Takes a string and returns the equivalent float.
     '3.0u' -> 3.0e-6"""
-    mult={'t':1.0e12,
-          'g':1.0e9,
+    mult={'t'  :1.0e12,
+          'g'  :1.0e9,
           'meg':1.0e6,
-          'k':1.0e3,
+          'k'  :1.0e3,
           'mil':25.4e-6,
-          'm':1.0e-3,
-          'u':1.0e-6,
-          'n':1.0e-9,
-          'p':1.0e-12,
-          'f':1.0e-15}
+          'm'  :1.0e-3,
+          'u'  :1.0e-6,
+          'n'  :1.0e-9,
+          'p'  :1.0e-12,
+          'f'  :1.0e-15}
     m=re.search('^([0-9e\+\-\.]+)(t|g|meg|k|mil|m|u|n|p|f)?',s.lower())
     if m.group(2):
         return float(m.group(1))*mult[m.group(2)]
