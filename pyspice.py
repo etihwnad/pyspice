@@ -132,6 +132,7 @@ xpreserve comments in position
 import sys, getopt, textwrap, warnings
 from optparse import OptionParser
 import re
+from decimal import Decimal
 
 try:
     from cStringIO import StringIO as StringIO
@@ -251,6 +252,29 @@ def options(args=sys.argv):
 #@-node:etihwnad.20060605200356.36:options
 #@-node:etihwnad.20060609195838:Option processing
 #@+node:etihwnad.20060605211347:classes
+#@+node:dan.20070113152139:exceptions
+
+class PyspiceError(Exception):
+    pass
+#@+node:dan.20070113152139.1:class UnitError
+class BadUnitError(PyspiceError):
+    pass
+#@-node:dan.20070113152139.1:class UnitError
+#@+node:etihwnad.20060605200356.32:class ElementError
+
+class ElementError(LookupError):
+    #@	@+others
+    #@+node:etihwnad.20060605200356.33:__init__
+    def __init__(self,elm='???'):
+        self.elm=elm
+    #@-node:etihwnad.20060605200356.33:__init__
+    #@+node:etihwnad.20060605200356.34:__str__
+    def __str__(self):
+        return str('No class defined for this element: '+self.elm)
+    #@-node:etihwnad.20060605200356.34:__str__
+    #@-others
+#@-node:etihwnad.20060605200356.32:class ElementError
+#@-node:dan.20070113152139:exceptions
 #@+node:dan.20061229140222:class Netlist
 
 class Netlist:
@@ -358,8 +382,8 @@ class Netlist:
     #@-others
 #@nonl
 #@-node:dan.20061229140222:class Netlist
-#@+node:dan.20061229231842:class ElementHandlers
-class ElementHandlers:
+#@+node:dan.20061229231842:class ElementHandler
+class ElementHandler:
     #@    @+others
     #@+node:dan.20061229231842.1:__init__
     def __init__(self):
@@ -380,7 +404,7 @@ class ElementHandlers:
     #@-node:dan.20061229231842.2:add_handler
     #@-others
 #@nonl
-#@-node:dan.20061229231842:class ElementHandlers
+#@-node:dan.20061229231842:class ElementHandler
 #@+node:dan.20061008213431:base classes
 #@+at
 # These classes are used to break down the spectrum of SPICE elements
@@ -408,15 +432,13 @@ class SpiceElement:
                order when printing modified netlist)
         """
         #accept lists of 'words' also; BE CAREFUL with this, though
-        if isinstance(line,str):
-            line=line.split()
-        self.line=line
-        self.type=line[0][0]
-        self.num=num
+        self.line = line
+        self.type = line[0]
+        self.num = num
     #@-node:etihwnad.20060605200356.4:__init__
     #@+node:etihwnad.20060605200356.5:__str__
     def __str__(self):
-        return wrapper.fill(' '.join(self.line))
+        return wrapper.fill(self.line)
     #@-node:etihwnad.20060605200356.5:__str__
     #@+node:etihwnad.20060605200356.6:drop
     def drop(self,val=0,mode='<'):
@@ -442,22 +464,26 @@ class Passive2NodeElement(SpiceElement):
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
         self.type='passive2'
-        self.n1=_current_scope+line[1]
-        self.n2=_current_scope+line[2]
-        self.value=unit(line[3])
-        self.param=dict() #store x=y as dictionary
-        for p in line[4:]:
+        arr = line.split()
+        self.name = arr[0]
+        self.n1 = _current_scope + arr[1]
+        self.n2 = _current_scope + arr[2]
+        self.value = unit(arr[3])
+        self.param = dict() #store x=y as dictionary
+        for p in arr[4:]:
             k,v=p.split('=')
             self.param[k]=unit(v)
     #@-node:etihwnad.20060605200356.12:__init__
     #@+node:etihwnad.20060605200356.13:__str__
     def __str__(self):
+        """Returns the netlist-file representation of this element"""
         s=StringIO()
-        print>>s, self.line[0],self.n1,self.n2,self.value,
+        
+        print>>s, self.name,self.n1,self.n2,self.value,
+        
         for k,v in self.param.iteritems():
-            #are there instances when 0 is (in)significant?
-            #if v==0: continue
             print>>s, k+'='+str(v),
+            
         return wrapper.fill(s.getvalue())
     #@-node:etihwnad.20060605200356.13:__str__
     #@+node:etihwnad.20060605200356.14:drop
@@ -498,23 +524,27 @@ class Active2NodeElement(SpiceElement):
     #@+node:dan.20061008213532.1:__init__
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
-        self.type='active2'
-        self.n1=_current_scope+line[1]
-        self.n2=_current_scope+line[2]
-        self.value=unit(line[3])
-        self.param=dict() #store x=y as dictionary
-        for p in line[4:]:
+        self.type = 'active2'
+        arr = line.split()
+        self.name = arr[0]
+        self.n1 = _current_scope + arr[1]
+        self.n2 = _current_scope + arr[2]
+        self.value = unit(arr[3])
+        self.param = dict() #store x=y as dictionary
+        for p in arr[4:]:
             k,v=p.split('=')
             self.param[k]=unit(v)
     #@-node:dan.20061008213532.1:__init__
     #@+node:dan.20061008213532.2:__str__
     def __str__(self):
+        """Returns the netlist-file representation of this element"""
         s=StringIO()
-        print>>s, self.line[0],self.n1,self.n2,self.value,
+        
+        print>>s, self.name,self.n1,self.n2,self.value,
+        
         for k,v in self.param.iteritems():
-            #are there instances when 0 is (in)significant?
-            #if v==0: continue
             print>>s, k+'='+str(v),
+            
         return wrapper.fill(s.getvalue())
     #@-node:dan.20061008213532.2:__str__
     #@-others
@@ -535,20 +565,22 @@ class Active4NodeElement(SpiceElement):
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
         self.type='active4'
-        self.n1=_current_scope+line[1]
-        self.n2=_current_scope+line[2]
-        self.n3=_current_scope+line[3]
-        self.n4=_current_scope+line[4]
-        self.value=unit(line[5])
+        arr = line.split()
+        self.name = arr[0]
+        self.n1 = _current_scope + arr[1]
+        self.n2 = _current_scope + arr[2]
+        self.n3 = _current_scope + arr[3]
+        self.n4 = _current_scope + arr[4]
+        self.value=unit(arr[5])
         self.param=dict() #store x=y as dictionary
-        for p in line[6:]:
+        for p in arr[6:]:
             k,v=p.split('=')
             self.param[k]=unit(v)
     #@-node:dan.20061008214054.1:__init__
     #@+node:dan.20061008214054.2:__str__
     def __str__(self):
         s=StringIO()
-        print>>s, self.line[0],self.n1,self.n2,self.n3,self.n4,self.value,
+        print>>s, self.name,self.n1,self.n2,self.n3,self.n4,self.value,
         for k,v in self.param.iteritems():
             #are there instances when 0 is (in)significant?
             #if v==0: continue
@@ -557,20 +589,6 @@ class Active4NodeElement(SpiceElement):
     #@-node:dan.20061008214054.2:__str__
     #@-others
 #@-node:dan.20061008214054:class Active4NodeElement
-#@+node:etihwnad.20060605200356.32:class ElementError
-
-class ElementError(LookupError):
-    #@	@+others
-    #@+node:etihwnad.20060605200356.33:__init__
-    def __init__(self,elm='???'):
-        self.elm=elm
-    #@-node:etihwnad.20060605200356.33:__init__
-    #@+node:etihwnad.20060605200356.34:__str__
-    def __str__(self):
-        return str('No class defined for this element: '+self.elm)
-    #@-node:etihwnad.20060605200356.34:__str__
-    #@-others
-#@-node:etihwnad.20060605200356.32:class ElementError
 #@-node:dan.20061008213431:base classes
 #@+node:dan.20061008213431.1:element classes
 #@+at
@@ -582,7 +600,7 @@ class ElementError(LookupError):
 #@-at
 #@@c
 #make a repository for element handlers
-elements=ElementHandlers()
+elements=ElementHandler()
 #@+node:etihwnad.20060605200356.7:class CommentLine
 
 class CommentLine(SpiceElement):
@@ -851,21 +869,27 @@ elements.add_handler('i',Isource)
 def unit(s):
     """Takes a string and returns the equivalent float.
     '3.0u' -> 3.0e-6"""
-    mult={'t'  :1.0e12,
-          'g'  :1.0e9,
-          'meg':1.0e6,
-          'k'  :1.0e3,
-          'mil':25.4e-6,
-          'm'  :1.0e-3,
-          'u'  :1.0e-6,
-          'n'  :1.0e-9,
-          'p'  :1.0e-12,
-          'f'  :1.0e-15}
-    m=re.search('^([0-9e\+\-\.]+)(t|g|meg|k|mil|m|u|n|p|f)?',s.lower())
-    if m.group(2):
-        return float(m.group(1))*mult[m.group(2)]
-    else:
-        return float(m.group(1))
+    mult={'t'  :Decimal('1.0e12'),
+          'g'  :Decimal('1.0e9'),
+          'meg':Decimal('1.0e6'),
+          'x'  :Decimal('1.0e6'),
+          'k'  :Decimal('1.0e3'),
+          'mil':Decimal('25.4e-6'),
+          'm'  :Decimal('1.0e-3'),
+          'u'  :Decimal('1.0e-6'),
+          'n'  :Decimal('1.0e-9'),
+          'p'  :Decimal('1.0e-12'),
+          'f'  :Decimal('1.0e-15')}
+    m=re.search('^([0-9e\+\-\.]+)(t|g|meg|x|k|mil|m|u|n|p|f)?',s.lower())
+    
+    try:
+        if m.group(2):
+            return Decimal(Decimal(m.group(1)))*mult[m.group(2)]
+        else:
+            return Decimal(m.group(1))
+    except:
+        raise BadUnitError
+#@nonl
 #@-node:etihwnad.20060612075426:unit
 #@+node:etihwnad.20060605200356.27:debug
 def debug(message):
