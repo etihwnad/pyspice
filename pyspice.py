@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-#@+leo-ver=4-thin
-#@+node:etihwnad.20060606092308.1:@thin pyspice.py
+#@+leo-ver=4
+#@+node:@file pyspice.py
 #@@first
 #@@language python
 #@@tabwidth -4
 #@<< head docstring >>
-#@+node:etihwnad.20060605200356.2:<< head docstring>>
+#@+node:<< head docstring>>
 """
 #@<< head >>
-#@+node:etihwnad.20060605202504:<< head >>
+#@+node:<< head >>
 pyspice.py v0.2a
 
 SPICE pre-processor that combines parallel elements (e.g. capacitors, mosfets)
@@ -23,29 +23,29 @@ modifying it for my needs.
   pyspice.py [options] [-i infile] [-o outfile]
  
  Use pyspice.py -h for all the options.
-#@-node:etihwnad.20060605202504:<< head >>
+#@-node:<< head >>
 #@nl
 #@<< copyright >>
-#@+node:etihwnad.20060605201903:<< copyright >>
+#@+node:<< copyright >>
 Copyright Dan White 2006
 
 Licensed by the GPL, see http://www.whiteaudio.com/soft/COPYING or the current
 GNU GPL license for details.
 
-#@-node:etihwnad.20060605201903:<< copyright >>
+#@-node:<< copyright >>
 #@nl
 #@<< release notes >>
-#@+node:dan.20061011115934:<< release notes >>
+#@+node:<< release notes >>
 Release Notes, changelog, whatever it turns out as...
 -----------------------------------------------------
 #@+others
-#@+node:dan.20061111103052:v0.2a
+#@+node:v0.2a
 pyspice.py v0.2a:
 ----------------
 -added a missing newline before an import statement
 
-#@-node:dan.20061111103052:v0.2a
-#@+node:dan.20061011120652:v0.2
+#@-node:v0.2a
+#@+node:v0.2
 pyspice.py v0.2:
 ----------------
 -At least default (pass through) handling of all element types.
@@ -58,24 +58,24 @@ NOTE: For combining, this uses a global node name scheme.  In other
 -Work is ongoing on the class structure and most important IMO is getting netlist
     hierarchy implemented. 
 
-#@-node:dan.20061011120652:v0.2
-#@+node:dan.20061011120117:v0.1
+#@-node:v0.2
+#@+node:v0.1
 pyspice v0.1:
 -------------
 Initial release.
 Only worked for netlist containing MOSFETs and Capacitors.
-#@-node:dan.20061011120117:v0.1
+#@-node:v0.1
 #@-others
 #@nonl
-#@-node:dan.20061011115934:<< release notes >>
+#@-node:<< release notes >>
 #@nl
 #@+others
-#@+node:etihwnad.20060605202632:structures
+#@+node:structures
  Data structures: (outdated)
   lines - list of tuples: (original_line, line.split(), line_type)
   caps  - dictionary of node pairs and capacitance between nodes
-#@-node:etihwnad.20060605202632:structures
-#@+node:etihwnad.20060605202632.1:todo
+#@-node:structures
+#@+node:todo
 TODO:
 xpreserve comments in position
 -element class definitions
@@ -121,14 +121,14 @@ xpreserve comments in position
     -allows more sophisticated dropping/combining with series elements
         specifically R+R+R+R chains -> equivalent R+- (roughly) for faster sims
                       C C C                        C
-#@-node:etihwnad.20060605202632.1:todo
+#@-node:todo
 #@-others
 """
 #@@nocolor
-#@-node:etihwnad.20060605200356.2:<< head docstring>>
+#@-node:<< head docstring>>
 #@nl
 #@<< global imports >>
-#@+node:etihwnad.20060605210612:<< global imports >>
+#@+node:<< global imports >>
 import sys, getopt, textwrap, warnings
 from optparse import OptionParser
 import re
@@ -138,10 +138,10 @@ try:
     from cStringIO import StringIO as StringIO
 except:
     from StringIO import StringIO as StringIO
-#@-node:etihwnad.20060605210612:<< global imports >>
+#@-node:<< global imports >>
 #@nl
 #@<< global vars >>
-#@+node:etihwnad.20060605205852:<< global vars >>
+#@+node:<< global vars >>
 ##
 # Global Shorthands
 ##
@@ -171,7 +171,7 @@ _ncombine_res=0
 #namespace tracking
 # -not implemented yet
 _current_scope=''
-#@-node:etihwnad.20060605205852:<< global vars >>
+#@-node:<< global vars >>
 #@nl
 
 #@+at
@@ -183,8 +183,8 @@ _current_scope=''
 dbg=''
 
 #@+others
-#@+node:etihwnad.20060609195838:Option processing
-#@+node:etihwnad.20060605200356.36:options
+#@+node:Option processing
+#@+node:options
 ##
 # Fancy option processing
 ##
@@ -249,33 +249,33 @@ def options(args=sys.argv):
     info("Combining m's:"+str(opt.combine_m))
     #return the option object
     return opt
-#@-node:etihwnad.20060605200356.36:options
-#@-node:etihwnad.20060609195838:Option processing
-#@+node:etihwnad.20060605211347:classes
-#@+node:dan.20070113152139:exceptions
+#@-node:options
+#@-node:Option processing
+#@+node:classes
+#@+node:exceptions
 
 class PyspiceError(Exception):
     pass
-#@+node:dan.20070113152139.1:class UnitError
+#@+node:class UnitError
 class BadUnitError(PyspiceError):
     pass
-#@-node:dan.20070113152139.1:class UnitError
-#@+node:etihwnad.20060605200356.32:class ElementError
+#@-node:class UnitError
+#@+node:class ElementError
 
 class ElementError(LookupError):
     #@	@+others
-    #@+node:etihwnad.20060605200356.33:__init__
+    #@+node:__init__
     def __init__(self,elm='???'):
         self.elm=elm
-    #@-node:etihwnad.20060605200356.33:__init__
-    #@+node:etihwnad.20060605200356.34:__str__
+    #@-node:__init__
+    #@+node:__str__
     def __str__(self):
         return str('No class defined for this element: '+self.elm)
-    #@-node:etihwnad.20060605200356.34:__str__
+    #@-node:__str__
     #@-others
-#@-node:etihwnad.20060605200356.32:class ElementError
-#@-node:dan.20070113152139:exceptions
-#@+node:dan.20061229140222:class Netlist
+#@-node:class ElementError
+#@-node:exceptions
+#@+node:class Netlist
 
 class Netlist:
     """Base class that holds a netlist.
@@ -288,29 +288,29 @@ class Netlist:
             -source other files
     """
     #@    @+others
-    #@+node:dan.20061229141817:__init__
+    #@+node:__init__
     def __init__(self,fname=None):
         """Optionally reads a netlist from a file"""
         self.lines = []
         self.deck = []
         if fname:
             self.readfile(fname)
-    #@-node:dan.20061229141817:__init__
-    #@+node:dan.20061229215859:add_element
+    #@-node:__init__
+    #@+node:add_element
     def add_element(self,line):
         """Takes a line (usually split on ' '), classifies it and adds the new
         object to the netlist"""
         self.deck.append( self.classify(line) )
     #@nonl
-    #@-node:dan.20061229215859:add_element
-    #@+node:dan.20061229142604:add_line
+    #@-node:add_element
+    #@+node:add_line
     def add_line(self,line):
         """TODO add_line docstring"""
         self.lines.append(line)
         
     #@nonl
-    #@-node:dan.20061229142604:add_line
-    #@+node:dan.20061229141501:readfile
+    #@-node:add_line
+    #@+node:readfile
     def readfile(self,fname):
         """Read a SPICE netlist from the open file pointer
     
@@ -372,20 +372,20 @@ class Netlist:
                 lines[n] = line.split()
         #read in file, now classify
         self.deck.append(map(self.add_element,self.lines))
-    #@-node:dan.20061229141501:readfile
-    #@+node:dan.20061229142423:classify
+    #@-node:readfile
+    #@+node:classify
     def classify(self,line):
         """Takes a line and creates an appropriate SpiceElement"""
         return elements.handler[line[0][0]](line)
     #@nonl
-    #@-node:dan.20061229142423:classify
+    #@-node:classify
     #@-others
 #@nonl
-#@-node:dan.20061229140222:class Netlist
-#@+node:dan.20061229231842:class ElementHandler
+#@-node:class Netlist
+#@+node:class ElementHandler
 class ElementHandler:
     #@    @+others
-    #@+node:dan.20061229231842.1:__init__
+    #@+node:__init__
     def __init__(self):
         # the valid element types
         valid_types = '*.abcdefghijklmnopqrstuvwxyz'
@@ -394,18 +394,18 @@ class ElementHandler:
         for t in valid_types:
             self.handler[t] = SpiceElement
     #@nonl
-    #@-node:dan.20061229231842.1:__init__
-    #@+node:dan.20061229231842.2:add_handler
+    #@-node:__init__
+    #@+node:add_handler
     def add_handler(self,type,handler):
         """Replaces the existing element object definition with the
         given one"""
         self.handler[type] = handler
     #@nonl
-    #@-node:dan.20061229231842.2:add_handler
+    #@-node:add_handler
     #@-others
 #@nonl
-#@-node:dan.20061229231842:class ElementHandler
-#@+node:dan.20061008213431:base classes
+#@-node:class ElementHandler
+#@+node:base classes
 #@+at
 # These classes are used to break down the spectrum of SPICE elements
 # into 'classes' of elements.  I.e. 2 node passives, 2-node sources, 4-node 
@@ -413,7 +413,7 @@ class ElementHandler:
 # and so on.  The elements found in a real netlist are based on these types.
 #@-at
 #@@c
-#@+node:etihwnad.20060605200356.3:class SpiceElement
+#@+node:class SpiceElement
 
 class SpiceElement:
     """Base class for SPICE elements.
@@ -423,7 +423,7 @@ class SpiceElement:
         drop() -> False
     """
     #@	@+others
-    #@+node:etihwnad.20060605200356.4:__init__
+    #@+node:__init__
     def __init__(self,line,num=None):
         """SpiceElement constructor
         line - netlist expanded line
@@ -435,20 +435,20 @@ class SpiceElement:
         self.line = line
         self.type = line[0]
         self.num = num
-    #@-node:etihwnad.20060605200356.4:__init__
-    #@+node:etihwnad.20060605200356.5:__str__
+    #@-node:__init__
+    #@+node:__str__
     def __str__(self):
         return wrapper.fill(self.line)
-    #@-node:etihwnad.20060605200356.5:__str__
-    #@+node:etihwnad.20060605200356.6:drop
+    #@-node:__str__
+    #@+node:drop
     def drop(self,val=0,mode='<'):
         """Template for dropping elements that defaults to NO if
         not overidden in the element class"""
         return False
-    #@-node:etihwnad.20060605200356.6:drop
+    #@-node:drop
     #@-others
-#@-node:etihwnad.20060605200356.3:class SpiceElement
-#@+node:etihwnad.20060605200356.11:class Passive2NodeElement
+#@-node:class SpiceElement
+#@+node:class Passive2NodeElement
 
 class Passive2NodeElement(SpiceElement):
     """Base class for 2-node elements.
@@ -460,7 +460,7 @@ class Passive2NodeElement(SpiceElement):
         drop(self,val,mode) -> bool
     """
     #@	@+others
-    #@+node:etihwnad.20060605200356.12:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
         self.type='passive2'
@@ -473,8 +473,8 @@ class Passive2NodeElement(SpiceElement):
         for p in arr[4:]:
             k,v=p.split('=')
             self.param[k]=unit(v)
-    #@-node:etihwnad.20060605200356.12:__init__
-    #@+node:etihwnad.20060605200356.13:__str__
+    #@-node:__init__
+    #@+node:__str__
     def __str__(self):
         """Returns the netlist-file representation of this element"""
         s=StringIO()
@@ -485,8 +485,8 @@ class Passive2NodeElement(SpiceElement):
             print>>s, k+'='+str(v),
             
         return wrapper.fill(s.getvalue())
-    #@-node:etihwnad.20060605200356.13:__str__
-    #@+node:etihwnad.20060605200356.14:drop
+    #@-node:__str__
+    #@+node:drop
     def drop(self,val=0.0,mode='<'):
         """Indicate whether to drop the element from the list.
         Occurs iff (val 'mode' self.value)
@@ -506,10 +506,10 @@ class Passive2NodeElement(SpiceElement):
         else:
             return False
         return False #shouldn't get here, but...
-    #@-node:etihwnad.20060605200356.14:drop
+    #@-node:drop
     #@-others
-#@-node:etihwnad.20060605200356.11:class Passive2NodeElement
-#@+node:dan.20061008213532:class Active2NodeElement
+#@-node:class Passive2NodeElement
+#@+node:class Active2NodeElement
 
 class Active2NodeElement(SpiceElement):
     """Base class for active 2-node elements.
@@ -521,7 +521,7 @@ class Active2NodeElement(SpiceElement):
         None
     """
     #@	@+others
-    #@+node:dan.20061008213532.1:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
         self.type = 'active2'
@@ -534,8 +534,8 @@ class Active2NodeElement(SpiceElement):
         for p in arr[4:]:
             k,v=p.split('=')
             self.param[k]=unit(v)
-    #@-node:dan.20061008213532.1:__init__
-    #@+node:dan.20061008213532.2:__str__
+    #@-node:__init__
+    #@+node:__str__
     def __str__(self):
         """Returns the netlist-file representation of this element"""
         s=StringIO()
@@ -546,10 +546,10 @@ class Active2NodeElement(SpiceElement):
             print>>s, k+'='+str(v),
             
         return wrapper.fill(s.getvalue())
-    #@-node:dan.20061008213532.2:__str__
+    #@-node:__str__
     #@-others
-#@-node:dan.20061008213532:class Active2NodeElement
-#@+node:dan.20061008214054:class Active4NodeElement
+#@-node:class Active2NodeElement
+#@+node:class Active4NodeElement
 
 class Active4NodeElement(SpiceElement):
     """Base class for active 4-node elements (xCyS).
@@ -561,7 +561,7 @@ class Active4NodeElement(SpiceElement):
         None
     """
     #@	@+others
-    #@+node:dan.20061008214054.1:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
         self.type='active4'
@@ -576,8 +576,8 @@ class Active4NodeElement(SpiceElement):
         for p in arr[6:]:
             k,v=p.split('=')
             self.param[k]=unit(v)
-    #@-node:dan.20061008214054.1:__init__
-    #@+node:dan.20061008214054.2:__str__
+    #@-node:__init__
+    #@+node:__str__
     def __str__(self):
         s=StringIO()
         print>>s, self.name,self.n1,self.n2,self.n3,self.n4,self.value,
@@ -586,11 +586,11 @@ class Active4NodeElement(SpiceElement):
             #if v==0: continue
             print>>s, k+'='+str(v),
         return wrapper.fill(s.getvalue())
-    #@-node:dan.20061008214054.2:__str__
+    #@-node:__str__
     #@-others
-#@-node:dan.20061008214054:class Active4NodeElement
-#@-node:dan.20061008213431:base classes
-#@+node:dan.20061008213431.1:element classes
+#@-node:class Active4NodeElement
+#@-node:base classes
+#@+node:element classes
 #@+at
 # This is a(n incomplete) definition of the various SPICE elements.
 # 
@@ -601,21 +601,21 @@ class Active4NodeElement(SpiceElement):
 #@@c
 #make a repository for element handlers
 elements=ElementHandler()
-#@+node:etihwnad.20060605200356.7:class CommentLine
+#@+node:class CommentLine
 
 class CommentLine(SpiceElement):
     """SPICE Comment line (/^\*.*/)
     """
     #@	@+others
-    #@+node:etihwnad.20060605200356.8:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
         self.type='comment'
-    #@-node:etihwnad.20060605200356.8:__init__
+    #@-node:__init__
     #@-others
 elements.add_handler('*',CommentLine)
-#@-node:etihwnad.20060605200356.7:class CommentLine
-#@+node:etihwnad.20060605200356.9:class ControlElement
+#@-node:class CommentLine
+#@+node:class ControlElement
 
 class ControlElement(SpiceElement):
     """Control statement object, no processing for now.
@@ -625,15 +625,15 @@ class ControlElement(SpiceElement):
     has only ONE node namespace, make sure subckt's have unique node names!
     """
     #@	@+others
-    #@+node:etihwnad.20060605200356.10:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         SpiceElement.__init__(self,line,num)
         self.type='control'
-    #@-node:etihwnad.20060605200356.10:__init__
+    #@-node:__init__
     #@-others
 elements.add_handler('.',ControlElement)
-#@-node:etihwnad.20060605200356.9:class ControlElement
-#@+node:etihwnad.20060605200356.15:class Capacitor
+#@-node:class ControlElement
+#@+node:class Capacitor
 
 class Capacitor(Passive2NodeElement):
     """Assumes SPICE element line:
@@ -644,12 +644,12 @@ class Capacitor(Passive2NodeElement):
         combine(other)
     """
     #@	@+others
-    #@+node:etihwnad.20060605200356.16:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         Passive2NodeElement.__init__(self,line,num)
         self.type='capacitor'
-    #@-node:etihwnad.20060605200356.16:__init__
-    #@+node:etihwnad.20060605200356.17:isparallel
+    #@-node:__init__
+    #@+node:isparallel
     def isparallel(self,other):
         """Returns True if instance is parallel with other instance
         """
@@ -659,8 +659,8 @@ class Capacitor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:etihwnad.20060605200356.17:isparallel
-    #@+node:etihwnad.20060605200356.18:combine
+    #@-node:isparallel
+    #@+node:combine
     def combine(self,other):
         """Adds values if capacitors are in parallel, returns True if
         it combined them.
@@ -676,11 +676,11 @@ class Capacitor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:etihwnad.20060605200356.18:combine
+    #@-node:combine
     #@-others
 elements.add_handler('c',Capacitor)
-#@-node:etihwnad.20060605200356.15:class Capacitor
-#@+node:etihwnad.20060612195947:class Inductor
+#@-node:class Capacitor
+#@+node:class Inductor
 
 class Inductor(Passive2NodeElement):
     """Assumes SPICE element line:
@@ -691,12 +691,12 @@ class Inductor(Passive2NodeElement):
         combine(other)
     """
     #@	@+others
-    #@+node:etihwnad.20060612195947.1:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         Passive2NodeElement.__init__(self,line,num)
         self.type='inductor'
-    #@-node:etihwnad.20060612195947.1:__init__
-    #@+node:etihwnad.20060612195947.2:isparallel
+    #@-node:__init__
+    #@+node:isparallel
     def isparallel(self,other):
         """Returns True if instance is parallel with other instance
         """
@@ -706,8 +706,8 @@ class Inductor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:etihwnad.20060612195947.2:isparallel
-    #@+node:etihwnad.20060612195947.3:combine
+    #@-node:isparallel
+    #@+node:combine
     def combine(self,other):
         """Combines values if inductors are in parallel, returns True if
         it combined them.
@@ -723,18 +723,18 @@ class Inductor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:etihwnad.20060612195947.3:combine
+    #@-node:combine
     #@-others
 elements.add_handler('l',Inductor)
-#@-node:etihwnad.20060612195947:class Inductor
-#@+node:etihwnad.20060605200356.19:class Mosfet
+#@-node:class Inductor
+#@+node:class Mosfet
 
 class Mosfet(SpiceElement):
     """Mosfet constructor takes an array derived from the
     netlist line
     """
     #@	@+others
-    #@+node:etihwnad.20060605200356.20:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         if isinstance(line,str):
             line=line.split()
@@ -752,8 +752,8 @@ class Mosfet(SpiceElement):
             self.param[k]=unit(v)
         self.w=self.param['w']
         self.l=self.param['l']
-    #@-node:etihwnad.20060605200356.20:__init__
-    #@+node:etihwnad.20060605200356.21:__str__
+    #@-node:__init__
+    #@+node:__str__
     def __str__(self):
         s=StringIO()
         print>>s, self.line[0], self.d, self.g, self.s, self.b, self.model,
@@ -761,8 +761,8 @@ class Mosfet(SpiceElement):
             if v==0: continue
             print>>s, k+'='+str(v),
         return wrapper.fill(s.getvalue())
-    #@-node:etihwnad.20060605200356.21:__str__
-    #@+node:etihwnad.20060605200356.22:isparallel
+    #@-node:__str__
+    #@+node:isparallel
     def isparallel(self,other):
         """Returns True if transistors are parallel
         """
@@ -778,8 +778,8 @@ class Mosfet(SpiceElement):
         else:
             return False
     
-    #@-node:etihwnad.20060605200356.22:isparallel
-    #@+node:etihwnad.20060605200356.23:combine
+    #@-node:isparallel
+    #@+node:combine
     def combine(self,other):
         """Combines adds other to self iff the transistors are identical,
         will NOT combine if W/L is different.  Parameter 'M' is incremented on
@@ -810,11 +810,11 @@ class Mosfet(SpiceElement):
                 return True
         else:
             return False
-    #@-node:etihwnad.20060605200356.23:combine
+    #@-node:combine
     #@-others
 elements.add_handler('m',Mosfet)
-#@-node:etihwnad.20060605200356.19:class Mosfet
-#@+node:etihwnad.20060605200356.24:class Resistor
+#@-node:class Mosfet
+#@+node:class Resistor
 
 class Resistor(Passive2NodeElement):
     """Assumes SPICE element line:
@@ -822,15 +822,15 @@ class Resistor(Passive2NodeElement):
     rXXX n1 n2 value p1=val p2=val ...
     """
     #@	@+others
-    #@+node:etihwnad.20060605200356.25:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         Passive2NodeElement.__init__(self,line,num)
         self.type='resistor'
-    #@-node:etihwnad.20060605200356.25:__init__
+    #@-node:__init__
     #@-others
 elements.add_handler('r',Resistor)
-#@-node:etihwnad.20060605200356.24:class Resistor
-#@+node:dan.20061008213903:class Vsource
+#@-node:class Resistor
+#@+node:class Vsource
 
 class Vsource(Active2NodeElement):
     """Assumes SPICE element line:
@@ -838,15 +838,15 @@ class Vsource(Active2NodeElement):
     vXXX n1 n2 value p1=val p2=val ...
     """
     #@	@+others
-    #@+node:dan.20061008213903.1:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         Active2NodeElement.__init__(self,line,num)
         self.type='vsource'
-    #@-node:dan.20061008213903.1:__init__
+    #@-node:__init__
     #@-others
 elements.add_handler('v',Vsource)
-#@-node:dan.20061008213903:class Vsource
-#@+node:dan.20061008213936:class Isource
+#@-node:class Vsource
+#@+node:class Isource
 
 class Isource(Active2NodeElement):
     """Assumes SPICE element line:
@@ -854,18 +854,18 @@ class Isource(Active2NodeElement):
     iXXX n1 n2 value p1=val p2=val ...
     """
     #@	@+others
-    #@+node:dan.20061008213936.1:__init__
+    #@+node:__init__
     def __init__(self,line,num):
         Active2NodeElement.__init__(self,line,num)
         self.type='isource'
-    #@-node:dan.20061008213936.1:__init__
+    #@-node:__init__
     #@-others
 elements.add_handler('i',Isource)
-#@-node:dan.20061008213936:class Isource
-#@-node:dan.20061008213431.1:element classes
-#@-node:etihwnad.20060605211347:classes
-#@+node:etihwnad.20060609195838.1:helpers
-#@+node:etihwnad.20060612075426:unit
+#@-node:class Isource
+#@-node:element classes
+#@-node:classes
+#@+node:helpers
+#@+node:unit
 def unit(s):
     """Takes a string and returns the equivalent float.
     '3.0u' -> 3.0e-6"""
@@ -890,18 +890,18 @@ def unit(s):
     except:
         raise BadUnitError
 #@nonl
-#@-node:etihwnad.20060612075426:unit
-#@+node:etihwnad.20060605200356.27:debug
+#@-node:unit
+#@+node:debug
 def debug(message):
     """Print debugging info to stderr."""
     print>>stderr,'Debug:',message
-#@-node:etihwnad.20060605200356.27:debug
-#@+node:etihwnad.20060605200356.26:info
+#@-node:debug
+#@+node:info
 def info(message):
     """Print information to stderr."""
     print>>stderr,'Info:',message
-#@-node:etihwnad.20060605200356.26:info
-#@+node:etihwnad.20060605200356.28:warning
+#@-node:info
+#@+node:warning
 def warning(message,elm=None,num=None):
     """Print warning to stderr.  If elm and num defined,
     print different message"""
@@ -909,9 +909,9 @@ def warning(message,elm=None,num=None):
         message=_opt.infile+":"+str(num)+" '"+elm+\
                 "' type not defined yet, passing through..."
     print>>stderr,'Warning:',message
-#@-node:etihwnad.20060605200356.28:warning
-#@-node:etihwnad.20060609195838.1:helpers
-#@+node:etihwnad.20060605200356.29:drop_2node
+#@-node:warning
+#@-node:helpers
+#@+node:drop_2node
 def drop_2node(elm,val,mode='<',type=None, verbose=True):
     """Drop 2-node elements in elm list according to val.
 
@@ -938,8 +938,8 @@ def drop_2node(elm,val,mode='<',type=None, verbose=True):
         else:
             info(infostr+'elements')
     return new_elm
-#@-node:etihwnad.20060605200356.29:drop_2node
-#@+node:etihwnad.20060605200356.30:write_2node
+#@-node:drop_2node
+#@+node:write_2node
 ##
 # write 2-node SPICE elements to file
 # node pair is specified by key in dict:
@@ -974,8 +974,8 @@ def write_2node(elm, type=None, ofp=sys.stdout, comment=None):
         info(infostr)
     else:
         info(infostr+'s')
-#@-node:etihwnad.20060605200356.30:write_2node
-#@+node:etihwnad.20060605200356.31:read_netlist
+#@-node:write_2node
+#@+node:read_netlist
 ##
 # Read netlist from open file object
 #  -make sure if reading from stdin to read only once and
@@ -983,7 +983,7 @@ def write_2node(elm, type=None, ofp=sys.stdout, comment=None):
 ##
 def read_netlist(fname):
     #@    << docstring >>
-    #@+node:etihwnad.20060609200142:<< docstring >>
+    #@+node:<< docstring >>
     """Read a SPICE netlist from the open file pointer
     
     read_netlist(filename) -> array lines
@@ -994,13 +994,13 @@ def read_netlist(fname):
     return:
         netlist (list) of SPICE netlist lines
     """
-    #@-node:etihwnad.20060609200142:<< docstring >>
+    #@-node:<< docstring >>
     #@nl
     #@    << imports >>
-    #@+node:etihwnad.20060609200142.1:<< imports >>
+    #@+node:<< imports >>
     import re
     #@nonl
-    #@-node:etihwnad.20060609200142.1:<< imports >>
+    #@-node:<< imports >>
     #@nl
 
     if isinstance(fname,file):
@@ -1038,8 +1038,8 @@ def read_netlist(fname):
             line=line[1:]
             lines[-1]=lines[-1]+line
     return lines
-#@-node:etihwnad.20060605200356.31:read_netlist
-#@+node:etihwnad.20060605200356.35:classify
+#@-node:read_netlist
+#@+node:classify
 def classify(net):
     """Reads expanded netlist and classifies each line,
     calls appropriate function to combine nodes.
@@ -1259,8 +1259,8 @@ def classify(net):
     #return classified netlist
     return elements
 
-#@-node:etihwnad.20060605200356.35:classify
-#@+node:etihwnad.20060605200356.37:main
+#@-node:classify
+#@+node:main
 ####
 # 
 # test code
@@ -1304,11 +1304,11 @@ def main():
     all.sort(cmp=lambda x,y: cmp(x.num,y.num))
     for x in all:
         print>>ofp,x
-#@-node:etihwnad.20060605200356.37:main
+#@-node:main
 #@-others
 
 #magic script-maker
 if __name__ == '__main__':
     main()
-#@-node:etihwnad.20060606092308.1:@thin pyspice.py
+#@-node:@file pyspice.py
 #@-leo
