@@ -3,12 +3,13 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
 <globals body_outline_ratio="0.334375">
-	<global_window_position top="0" left="0" height="687" width="1280"/>
+	<global_window_position top="10" left="10" height="687" width="1280"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
 <find_panel_settings/>
 <vnodes>
+<v t="dan.20080319143651"><vh>@chapters</vh></v>
 <v t="etihwnad.20060606092308" a="E"><vh>Notes</vh></v>
 <v t="dan.20070114122421"><vh>pyspice hierarchy</vh>
 <v t="dan.20070114122421.1"><vh>readNetlist</vh></v>
@@ -19,9 +20,9 @@
 </v>
 </v>
 <v t="dan.20070210134628" tnodeList="dan.20070210134628"><vh>@file Roadmap</vh></v>
-<v t="dan.20070210134929" a="TV" tnodeList="dan.20070210134929"><vh>@file HISTORY</vh></v>
+<v t="dan.20070210134929" tnodeList="dan.20070210134929"><vh>@file HISTORY</vh></v>
 <v t="dan.20070210134747" tnodeList="dan.20070210134747"><vh>@file README</vh></v>
-<v t="etihwnad.20060606092308.1" a="E" tnodeList="etihwnad.20060606092308.1,etihwnad.20060605200356.2,etihwnad.20060605202504,etihwnad.20060605201903,dan.20061011115934,dan.20061111103052,dan.20061011120652,dan.20061011120117,etihwnad.20060605202632,etihwnad.20060605202632.1,etihwnad.20060605210612,etihwnad.20060605205852,etihwnad.20060609195838,etihwnad.20060605200356.36,etihwnad.20060605211347,dan.20070113152139,dan.20070113152139.1,etihwnad.20060605200356.32,etihwnad.20060605200356.33,etihwnad.20060605200356.34,dan.20061229140222,dan.20061229141817,dan.20061229215859,dan.20061229142604,dan.20061229141501,dan.20061229142423,dan.20061229231842,dan.20061229231842.1,dan.20061229231842.2,dan.20061008213431,etihwnad.20060605200356.3,etihwnad.20060605200356.4,etihwnad.20060605200356.5,etihwnad.20060605200356.6,etihwnad.20060605200356.11,etihwnad.20060605200356.12,etihwnad.20060605200356.13,etihwnad.20060605200356.14,dan.20061008213532,dan.20061008213532.1,dan.20061008213532.2,dan.20061008214054,dan.20061008214054.1,dan.20061008214054.2,dan.20061008213431.1,etihwnad.20060605200356.7,etihwnad.20060605200356.8,etihwnad.20060605200356.9,etihwnad.20060605200356.10,etihwnad.20060605200356.15,etihwnad.20060605200356.16,etihwnad.20060605200356.17,etihwnad.20060605200356.18,etihwnad.20060612195947,etihwnad.20060612195947.1,etihwnad.20060612195947.2,etihwnad.20060612195947.3,etihwnad.20060605200356.19,etihwnad.20060605200356.20,etihwnad.20060605200356.21,etihwnad.20060605200356.22,etihwnad.20060605200356.23,etihwnad.20060605200356.24,etihwnad.20060605200356.25,dan.20061008213903,dan.20061008213903.1,dan.20061008213936,dan.20061008213936.1,etihwnad.20060609195838.1,etihwnad.20060612075426,etihwnad.20060605200356.27,etihwnad.20060605200356.26,etihwnad.20060605200356.28,etihwnad.20060605200356.29,etihwnad.20060605200356.30,etihwnad.20060605200356.31,etihwnad.20060609200142,etihwnad.20060609200142.1,etihwnad.20060605200356.35,etihwnad.20060605200356.37"><vh>@file pyspice.py</vh>
+<v t="etihwnad.20060606092308.1" tnodeList="etihwnad.20060606092308.1,etihwnad.20060605200356.2,etihwnad.20060605202504,etihwnad.20060605201903,dan.20061011115934,dan.20061111103052,dan.20061011120652,dan.20061011120117,etihwnad.20060605202632,etihwnad.20060605202632.1,etihwnad.20060605210612,etihwnad.20060605205852,etihwnad.20060609195838,etihwnad.20060605200356.36,etihwnad.20060605211347,dan.20070113152139,dan.20070113152139.1,etihwnad.20060605200356.32,etihwnad.20060605200356.33,etihwnad.20060605200356.34,dan.20061229140222,dan.20061229141817,dan.20061229215859,dan.20061229142604,dan.20061229141501,dan.20061229142423,dan.20061229231842,dan.20061229231842.1,dan.20061229231842.2,dan.20061008213431,etihwnad.20060605200356.3,etihwnad.20060605200356.4,etihwnad.20060605200356.5,etihwnad.20060605200356.6,etihwnad.20060605200356.11,etihwnad.20060605200356.12,etihwnad.20060605200356.13,etihwnad.20060605200356.14,dan.20061008213532,dan.20061008213532.1,dan.20061008213532.2,dan.20061008214054,dan.20061008214054.1,dan.20061008214054.2,dan.20061008213431.1,etihwnad.20060605200356.7,etihwnad.20060605200356.8,etihwnad.20060605200356.9,etihwnad.20060605200356.10,etihwnad.20060605200356.15,etihwnad.20060605200356.16,etihwnad.20060605200356.17,etihwnad.20060605200356.18,etihwnad.20060612195947,etihwnad.20060612195947.1,etihwnad.20060612195947.2,etihwnad.20060612195947.3,etihwnad.20060605200356.19,etihwnad.20060605200356.20,etihwnad.20060605200356.21,etihwnad.20060605200356.22,etihwnad.20060605200356.23,etihwnad.20060605200356.24,etihwnad.20060605200356.25,dan.20061008213903,dan.20061008213903.1,dan.20061008213936,dan.20061008213936.1,etihwnad.20060609195838.1,etihwnad.20060612075426,etihwnad.20060605200356.27,etihwnad.20060605200356.26,etihwnad.20060605200356.28,etihwnad.20060605200356.29,etihwnad.20060605200356.30,etihwnad.20060605200356.31,etihwnad.20060609200142,etihwnad.20060609200142.1,etihwnad.20060605200356.35,etihwnad.20060605200356.37"><vh>@nosent pyspice.py</vh>
 <v t="etihwnad.20060605200356.2"><vh>&lt;&lt; head docstring&gt;&gt;</vh>
 <v t="etihwnad.20060605202504"><vh>&lt;&lt; head &gt;&gt;</vh></v>
 <v t="etihwnad.20060605201903"><vh>&lt;&lt; copyright &gt;&gt;</vh></v>
@@ -126,7 +127,7 @@
 <v t="etihwnad.20060605200356.35"><vh>classify</vh></v>
 <v t="etihwnad.20060605200356.37"><vh>main</vh></v>
 </v>
-<v t="dan.20070113143715" tnodeList="dan.20070113143715,dan.20070113145158,dan.20070113154450"><vh>@file pyspicetest.py</vh>
+<v t="dan.20070113143715" a="V" tnodeList="dan.20070113143715,dan.20070113145158,dan.20070113154450"><vh>@file test_pyspice.py</vh>
 <v t="dan.20070113145158"><vh>converstions</vh></v>
 <v t="dan.20070113154450"><vh>netlist parsing</vh></v>
 </v>
@@ -176,12 +177,12 @@ class Active2NodeElement(SpiceElement):
 <t tx="dan.20061008213532.2">def __str__(self):
     """Returns the netlist-file representation of this element"""
     s=StringIO()
-    
+
     print&gt;&gt;s, self.name,self.n1,self.n2,self.value,
-    
+
     for k,v in self.param.iteritems():
         print&gt;&gt;s, k+'='+str(v),
-        
+
     return wrapper.fill(s.getvalue())
 </t>
 <t tx="dan.20061008213903">
@@ -288,19 +289,19 @@ class Netlist:
     """Read a SPICE netlist from the open file pointer
 
     readfile(filename) -&gt; array lines
-    
+
     Returns a list of expanded lines (without continuation '+')
     Keeps case of comments, all other lines are lowercased
-    
+
     return:
         netlist (list) of SPICE netlist lines
-    
+
     Notes:
         -we need to read at least a full line with continuations before we can
          add the line to the netlist
     """
     import re
-    
+
     if isinstance(fname,file):
         ifp=fname
     else:
@@ -309,7 +310,7 @@ class Netlist:
     #finds a "name = value" pair for shrinking
     re_param=re.compile(r"(\S*)\s*=\s*(\S*)")
     #read in whole file to a list of lines
-    
+
     #
     #
     # NOTE:
@@ -359,7 +360,8 @@ class Netlist:
 <t tx="dan.20061229142604">def add_line(self,line):
     """TODO add_line docstring"""
     self.lines.append(line)
-    </t>
+
+</t>
 <t tx="dan.20061229215859">def add_element(self,line):
     """Takes a line (usually split on ' '), classifies it and adds the new
     object to the netlist"""
@@ -410,15 +412,15 @@ class unitConversion(unittest.TestCase):
                     ('67N',     D('67.0e-9')),
                     ('4P',      D('4.0e-12')),
                     ('3F',      D('3.0e-15')) )
-    
+
     badValues =   ( 'like' )
-                    
+
     def test_unit_knownValues(self):
         """unit() should give known result with known input"""
         for s, num in self.knownValues:
             result = pyspice.unit(s)
             self.assertEqual(num,result)
-            
+
     def test_unit_badValues(self):
         """unit() should fail with bad input"""
         for s in self.badValues:
@@ -503,6 +505,7 @@ Please see Roadmap for more information on what's currently going on here.
 The poorly-documented chronology of this package's development progress.  The intention is to keep me focused on the big picture and just fill in the missing parts.
 
 </t>
+<t tx="dan.20080319143651"></t>
 <t tx="etihwnad.20060605200356.2">"""
 &lt;&lt; head &gt;&gt;
 &lt;&lt; copyright &gt;&gt;
@@ -556,7 +559,7 @@ elements.add_handler('*',CommentLine)
 class ControlElement(SpiceElement):
     """Control statement object, no processing for now.
     Note: this will eventially be a base class for the real control elements
-    
+
     Note: currently has no knowledge of blocks (.lib/.endl, .subckt/.ends)
     has only ONE node namespace, make sure subckt's have unique node names!
     """
@@ -595,18 +598,18 @@ class Passive2NodeElement(SpiceElement):
 <t tx="etihwnad.20060605200356.13">def __str__(self):
     """Returns the netlist-file representation of this element"""
     s=StringIO()
-    
+
     print&gt;&gt;s, self.name,self.n1,self.n2,self.value,
-    
+
     for k,v in self.param.iteritems():
         print&gt;&gt;s, k+'='+str(v),
-        
+
     return wrapper.fill(s.getvalue())
 </t>
 <t tx="etihwnad.20060605200356.14">def drop(self,val=0.0,mode='&lt;'):
     """Indicate whether to drop the element from the list.
     Occurs iff (val 'mode' self.value)
-    
+
     Can this be converted to specifying an arbitrary binary function?
       This may allow a more elegant comparison.
       e.g. mode=&lt; instead of mode='&lt;' or mode=cap_smaller(x,y)
@@ -721,9 +724,9 @@ elements.add_handler('m',Mosfet)
     self, other is left alone.
 
     Returns True if it combined the transistors.
-    
+
     Increments global _ncombine_mosfets for information.
-    
+
     NOTE: This currently merely adds the parameters (except w, l, and m)
     without regard to their meaning.  Here is the place to specially handle
     certain FET parameters.  Average certain parameters?
@@ -740,7 +743,7 @@ elements.add_handler('m',Mosfet)
                 self.param['m']+=other.param.get('m',1)
             else:
                 self.param['m']=2
-            
+
             _ncombine_mosfets+=1
             return True
     else:
@@ -895,7 +898,7 @@ class ElementError(LookupError):
 <t tx="etihwnad.20060605200356.35">def classify(net):
     """Reads expanded netlist and classifies each line,
     calls appropriate function to combine nodes.
-    
+
     net - list of unwrapped SPICE netlist lines
     """
     # Is there a better (faster) way of doing this?  Maybe generating a dict
@@ -1186,7 +1189,7 @@ def main():
     global _opt
     opt = options()
     _opt=opt
-    
+
     import textwrap
     #set line continuation style and max width
     wrapper=textwrap.TextWrapper(subsequent_indent='+ ',width=opt.linewidth)
@@ -1239,7 +1242,7 @@ modifying it for my needs.
  Drop combined caps smaller than X fF
  Usage:
   pyspice.py [options] [-i infile] [-o outfile]
- 
+
  Use pyspice.py -h for all the options.
 </t>
 <t tx="etihwnad.20060605202632"> Data structures: (outdated)
@@ -1383,14 +1386,15 @@ return:
           'p'  :Decimal('1.0e-12'),
           'f'  :Decimal('1.0e-15')}
     m=re.search('^([0-9e\+\-\.]+)(t|g|meg|x|k|mil|m|u|n|p|f)?',s.lower())
-    
+
     try:
         if m.group(2):
             return Decimal(Decimal(m.group(1)))*mult[m.group(2)]
         else:
             return Decimal(m.group(1))
     except:
-        raise BadUnitError</t>
+        raise BadUnitError
+</t>
 <t tx="etihwnad.20060612195947">
 class Inductor(Passive2NodeElement):
     """Assumes SPICE element line:

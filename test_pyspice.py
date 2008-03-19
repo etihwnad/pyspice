@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #@+leo-ver=4
-#@+node:@file pyspicetest.py
+#@+node:@file test_pyspice.py
 #@@first
 #@@language python
 #@@tabwidth -4
@@ -32,15 +32,15 @@ class unitConversion(unittest.TestCase):
                     ('67N',     D('67.0e-9')),
                     ('4P',      D('4.0e-12')),
                     ('3F',      D('3.0e-15')) )
-    
+
     badValues =   ( 'like' )
-                    
+
     def test_unit_knownValues(self):
         """unit() should give known result with known input"""
         for s, num in self.knownValues:
             result = pyspice.unit(s)
             self.assertEqual(num,result)
-            
+
     def test_unit_badValues(self):
         """unit() should fail with bad input"""
         for s in self.badValues:
@@ -58,5 +58,5 @@ class netlistParsing(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 #@nonl
-#@-node:@file pyspicetest.py
+#@-node:@file test_pyspice.py
 #@-leo
