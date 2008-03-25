@@ -2,6 +2,57 @@
 #@+node:@file Roadmap
 #@@nocolor
 Contained here is the descriptive blueprint of how this package is supposed to work
+
+#@+others
+#@+node:todo
+
+TODO:
+xpreserve comments in position
+-element class definitions
+    xinductor
+    xv-source
+    xi-source
+    -e-source (VCVS)
+-preserve node namespaces (within subckts, libraries, etc.)
+    -find illegal SPICE node name character to prepend namespace
+     e.g. @sub1.node1
+-handle control statements specially
+    -.model
+    -.dc, .ac, .tran
+    -.lib/.endl handling
+    -.meas
+    -.print
+    -.probe
+    -.param
+    -.option
+    -.global
+    -.ic
+    -.subckt/.ends
+    -.prot/.unprot
+    -.alter blocks
+    -.end
+    -others?
+-option to find/evaluate .param statements?
+    -HSPICE takes params, ngspice doesn't
+    -logic to find when an explicit number is specified (e.g. 10k) or
+     when it is a parameter (e.g. 'value')
+    -create dict of .params and use as substitution keys in:
+        k = v model parameters
+        node names
+        element values (Rxx n1 n2 'value'; Cxx n1 n2 'fc/2')
+        others?
+-option to make a flat output (inline everything):
+    .lib statements
+    .include statements
+    .model statements
+    others?
+-store node dictionary to keep track of elements connected to that node
+    -allows tracking of R-C nodes to drop C or R based on time constant
+    -allows more sophisticated dropping/combining with series elements
+        specifically R+R+R+R chains -> equivalent R+- (roughly) for faster sims
+                      C C C                        C
+#@-node:todo
+#@-others
 #@nonl
 #@-node:@file Roadmap
 #@-leo

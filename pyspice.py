@@ -4,7 +4,9 @@
 #@@first
 #@@language python
 #@@tabwidth -4
-__version = '0.2a'
+
+__version__ = '0.2a'
+
 #@<< head docstring >>
 #@+node:<< head docstring>>
 """
@@ -69,54 +71,6 @@ Only worked for netlist containing MOSFETs and Capacitors.
 #@-node:<< release notes >>
 #@nl
 #@+others
-#@+node:todo
-
-TODO:
-xpreserve comments in position
--element class definitions
-    xinductor
-    xv-source
-    xi-source
-    -e-source (VCVS)
--preserve node namespaces (within subckts, libraries, etc.)
-    -find illegal SPICE node name character to prepend namespace
-     e.g. @sub1.node1
--handle control statements specially
-    -.model
-    -.dc, .ac, .tran
-    -.lib/.endl handling
-    -.meas
-    -.print
-    -.probe
-    -.param
-    -.option
-    -.global
-    -.ic
-    -.subckt/.ends
-    -.prot/.unprot
-    -.alter blocks
-    -.end
-    -others?
--option to find/evaluate .param statements?
-    -HSPICE takes params, ngspice doesn't
-    -logic to find when an explicit number is specified (e.g. 10k) or
-     when it is a parameter (e.g. 'value')
-    -create dict of .params and use as substitution keys in:
-        k=v model parameters
-        node names
-        element values (Rxx n1 n2 'value'; Cxx n1 n2 'fc/2')
-        others?
--option to make a flat output (inline everything):
-    .lib statements
-    .include statements
-    .model statements
-    others?
--store node dictionary to keep track of elements connected to that node
-    -allows tracking of R-C nodes to drop C or R based on time constant
-    -allows more sophisticated dropping/combining with series elements
-        specifically R+R+R+R chains -> equivalent R+- (roughly) for faster sims
-                      C C C                        C
-#@-node:todo
 #@-others
 """
 #@@nocolor
@@ -154,7 +108,7 @@ _wrapper = textwrap.TextWrapper(subsequent_indent = '+ ', width = 75)
 
 
 #global variables
-_counts=dict() #keyed by spice element letter
+_counts = dict() #keyed by spice element letter
 _ncombine_capacitors = 0
 _ncombine_inductors = 0
 _ncombine_mosfets = 0
@@ -172,7 +126,7 @@ _current_scope = ''
 # follow SPICE element names (c-capacitor, l-inductor)
 #@-at
 #@@c
-dbg=''
+dbg = ''
 
 #@+others
 #@+node:Option processing
@@ -228,7 +182,7 @@ def options(args=sys.argv):
         if opt.v: info('Input: stdin')
     else:
         try:
-            ifp = open(opt.infile,'rU') #python's universal line ending mode
+            ifp = open(opt.infile, 'rU') #python's universal line ending mode
             if opt.v: info('Input: '+opt.infile)
         except IOError, (errno, strerror):
             print>>stderr, "IOError(%s): %s '%s'" % (errno, strerror, opt.infile)      
@@ -249,8 +203,8 @@ def options(args=sys.argv):
     opt.dropcap = opt.dropcap * 1e-15
     if opt.v:
         info('Dropping caps < ' + str(opt.dropcap) + ' F')
-        info("Combining c's:" + str(opt.combine_c))
-        info("Combining m's:" + str(opt.combine_m))
+        info("Combining c's: " + str(opt.combine_c))
+        info("Combining m's: " + str(opt.combine_m))
 
     #linewidth
     _wrapper.line_width = opt.linewidth
@@ -276,8 +230,8 @@ class BadUnitError(PyspiceError):
 class ElementError(LookupError):
     #@	@+others
     #@+node:__init__
-    def __init__(self,elm='???'):
-        self.elm=elm
+    def __init__(self, elm='???'):
+        self.elm = elm
 
     #@-node:__init__
     #@+node:__str__
@@ -317,6 +271,34 @@ class Netlist:
         if fname:
             self.readfile(fname)
     #@-node:__init__
+    #@+node:_addMassagedLine
+    def _addMassagedLine(self, line):
+        """Add the given non-empty line to netlist.  Assumes the line has already
+        been massaged."""
+        self.lines.append(line)
+    #@nonl
+    #@-node:_addMassagedLine
+    #@+node:addElement
+    def addElement(self, element):
+        self.deck.append(element)
+        self.elements[element.type].append(element)
+    #@-node:addElement
+    #@+node:addLine
+    def addLine(self, line):
+        """Add the given non-empty line to netlist after massaging"""
+        if line:
+            #fail on line continuations
+            if line[0] == '+':
+                raise PyspiceError('addLine does not handle line continuations')
+            else:
+                line = self.massageLine(line)
+                self._addMassagedLine(line)
+    #@-node:addLine
+    #@+node:classify
+    def classify(self, line, num=None):
+        """Takes a line and creates an appropriate SpiceElement"""
+        return _elementHandler.handler[line[0][0]](line, num=num)
+    #@-node:classify
     #@+node:massageLine
     #finds a "name = value" pair for shrinking
     RE_PARAM = re.compile(r"(\S*)\s*=\s*(\S*)")
@@ -346,34 +328,6 @@ class Netlist:
 
         return line
     #@-node:massageLine
-    #@+node:addElement
-    def addElement(self, element):
-        self.deck.append(element)
-        self.elements[element.type].append(element)
-    #@-node:addElement
-    #@+node:addLine
-    def addLine(self, line):
-        """Add the given non-empty line to netlist after massaging"""
-        if line:
-            #fail on line continuations
-            if line[0] == '+':
-                raise PyspiceError('addLine does not handle line continuations')
-            else:
-                line = self.massageLine(line)
-                self._addMassagedLine(line)
-    #@-node:addLine
-    #@+node:_addMassagedLine
-    def _addMassagedLine(self, line):
-        """Add the given non-empty line to netlist.  Assumes the line has already
-        been massaged."""
-        self.lines.append(line)
-    #@nonl
-    #@-node:_addMassagedLine
-    #@+node:classify
-    def classify(self, line, num=None):
-        """Takes a line and creates an appropriate SpiceElement"""
-        return _elementHandler.handler[line[0][0]](line, num=num)
-    #@-node:classify
     #@+node:readfile
     def readfile(self, fname):
         """Read a SPICE netlist from the open file pointer into the netlist.
@@ -417,6 +371,12 @@ class Netlist:
             self.addElement(self.classify(mLine, num=n))
             currentCard = line
     #@-node:readfile
+    #@+node:removeElement
+    def removeElement(self, element):
+        self.deck.remove(element)
+        self.elements[element.type].remove(element)
+    #@nonl
+    #@-node:removeElement
     #@-others
 #@-node:class Netlist
 #@+node:class ElementHandler
@@ -450,7 +410,7 @@ class ElementHandler:
 class SpiceElement:
     """Base class for SPICE elements.
     Methods:
-        __init__(self,line,num) -> SpiceElement
+        __init__(self, line, num) -> SpiceElement
         __str__(self) -> string spice line
         drop() -> False
     """
@@ -490,32 +450,32 @@ class Passive2NodeElement(SpiceElement):
     Inherits:
         None
     Redefines:
-        drop(self,val,mode) -> bool
+        drop(self, val, mode) -> bool
     """
     #@	@+others
     #@+node:__init__
     def __init__(self, line, num):
-        SpiceElement.__init__(self,line,num)
-        self.type='passive2'
+        SpiceElement.__init__(self, line, num)
+        self.type = 'passive2'
         self.typeName = 'Passive2NodeElement'
         arr = line.split()
         self.name = arr[0]
         self.n1 = _current_scope + arr[1]
         self.n2 = _current_scope + arr[2]
         self.value = unit(arr[3])
-        self.param = dict() #store x=y as dictionary
+        self.param = dict() #store x = y as dictionary
         for p in arr[4:]:
-            k,v=p.split('=')
-            self.param[k]=unit(v)
+            k, v = p.split('=')
+            self.param[k] = unit(v)
     #@-node:__init__
     #@+node:__str__
     def __str__(self):
         """Returns the netlist-file representation of this element"""
-        s=StringIO()
+        s = StringIO()
 
-        print>>s, self.name,self.n1,self.n2,self.value,
+        print>>s, self.name, self.n1, self.n2, self.value,
 
-        for k,v in self.param.iteritems():
+        for k, v in self.param.iteritems():
             print>>s, k+'='+str(v),
 
         return _wrapper.fill(s.getvalue())
@@ -527,7 +487,7 @@ class Passive2NodeElement(SpiceElement):
 
         Can this be converted to specifying an arbitrary binary function?
           This may allow a more elegant comparison.
-          e.g. mode=< instead of mode='<' or mode=cap_smaller(x,y)
+          e.g. mode = < instead of mode = '<' or mode = cap_smaller(x, y)
         """
         if mode == '<':
             if self.value < val: return True
@@ -557,7 +517,7 @@ class Active2NodeElement(SpiceElement):
     #@	@+others
     #@+node:__init__
     def __init__(self, line, num):
-        SpiceElement.__init__(self,line,num)
+        SpiceElement.__init__(self, line, num)
         self.type = 'active2'
         self.typeName = 'Active2NodeElement'
         arr = line.split()
@@ -565,9 +525,9 @@ class Active2NodeElement(SpiceElement):
         self.n1 = _current_scope + arr[1]
         self.n2 = _current_scope + arr[2]
         self.value = unit(arr[3])
-        self.param = dict() #store x=y as dictionary
+        self.param = dict() #store x = y as dictionary
         for p in arr[4:]:
-            k,v = p.split('=')
+            k, v = p.split('=')
             self.param[k] = unit(v)
     #@-node:__init__
     #@+node:__str__
@@ -577,7 +537,7 @@ class Active2NodeElement(SpiceElement):
 
         print>>s, self.name, self.n1, self.n2, self.value,
 
-        for k,v in self.param.iteritems():
+        for k, v in self.param.iteritems():
             print>>s, k + '=' + str(v),
 
         return _wrapper.fill(s.getvalue())
@@ -608,18 +568,18 @@ class Active4NodeElement(SpiceElement):
         self.n3 = _current_scope + arr[3]
         self.n4 = _current_scope + arr[4]
         self.value = unit(arr[5])
-        self.param = dict() #store x=y as dictionary
+        self.param = dict() #store x = y as dictionary
         for p in arr[6:]:
-            k,v = p.split('=')
+            k, v = p.split('=')
             self.param[k] = unit(v)
     #@-node:__init__
     #@+node:__str__
     def __str__(self):
         s = StringIO()
         print>>s, self.name, self.n1, self.n2, self.n3, self.n4, self.value,
-        for k,v in self.param.iteritems():
+        for k, v in self.param.iteritems():
             #are there instances when 0 is (in)significant?
-            #if v==0: continue
+            #if v == 0: continue
             print>>s, k + '=' + str(v),
         return _wrapper.fill(s.getvalue())
     #@-node:__str__
@@ -632,7 +592,7 @@ class Active4NodeElement(SpiceElement):
 # 
 # NOTE: When adding a new element type definition, be sure to add a handler
 #   for the new class after defining the class using:
-#       elements.add_handler('x',Xdevice)
+#       elements.add_handler('x', Xdevice)
 #@-at
 #@@c
 #make a repository for element handlers
@@ -700,7 +660,7 @@ class Capacitor(Passive2NodeElement):
             return False
     #@-node:isparallel
     #@+node:combine
-    def combine(self,other):
+    def combine(self, other):
         """Adds values if capacitors are in parallel, returns True if
         it combined them.
 
@@ -748,7 +708,7 @@ class Inductor(Passive2NodeElement):
             return False
     #@-node:isparallel
     #@+node:combine
-    def combine(self,other):
+    def combine(self, other):
         """Combines values if inductors are in parallel, returns True if
         it combined them.
 
@@ -776,7 +736,7 @@ class Mosfet(SpiceElement):
     #@	@+others
     #@+node:__init__
     def __init__(self, line, num):
-        if isinstance(line,str):
+        if isinstance(line, str):
             line = line.split()
         self.line = line
         self.type = 'm'
@@ -789,7 +749,7 @@ class Mosfet(SpiceElement):
         self.model = line[5]
         self.param = dict()
         for p in line[6:]:
-            k,v = p.split('=')
+            k, v = p.split('=')
             self.param[k] = unit(v)
         self.w = self.param['w']
         self.l = self.param['l']
@@ -798,7 +758,7 @@ class Mosfet(SpiceElement):
     def __str__(self):
         s = StringIO()
         print>>s, self.line[0], self.d, self.g, self.s, self.b, self.model,
-        for k,v in self.param.iteritems():
+        for k, v in self.param.iteritems():
             if v == 0: continue
             print>>s, k + '=' + str(v),
         return _wrapper.fill(s.getvalue())
@@ -838,12 +798,12 @@ class Mosfet(SpiceElement):
         if self.isparallel(other):
             #combine iff W/L (for original FET) is same also
             if self.w == other.w and self.l == other.l:
-                for k,v in other.param.iteritems():
+                for k, v in other.param.iteritems():
                     if k == 'w' or k == 'l' or k == 'm': continue
                     self.param[k] += v
                 if ('m' in self.param.keys()) or ('m' in other.param.keys()):
                     #add other's M parameter or increment
-                    self.param['m'] += other.param.get('m',1)
+                    self.param['m'] += other.param.get('m', 1)
                 else:
                     self.param['m'] = 2
 
@@ -915,7 +875,7 @@ def combineCapacitorsInplace(nlist):
     of equivalent value.  The capacitor is named by the first-occuring name.
     Returns the number of combined capacitors.'''
 
-    caps = [c for c in nlist.deck if c.type=='c']
+    caps = [c for c in nlist.deck if c.type == 'c']
 
     #this modifies the list being iterated over in place
     #usually this is BAD, here it is our way of only checking capacitor
@@ -929,7 +889,7 @@ def combineCapacitorsInplace(nlist):
             if c.combine(x):
                 n += 1
                 caps.remove(x)
-                nlist.deck.remove(x)
+                nlist.removeElement(x)
 
     return n
 #@-node:combineCapacitorsInplace
@@ -937,7 +897,7 @@ def combineCapacitorsInplace(nlist):
 def combineMosfetsInplace(nlist):
     '''TODO'''
 
-    fets = [m for m in nlist.deck if m.type=='m']
+    fets = [m for m in nlist.deck if m.type == 'm']
 
     n = 0
     for m in fets:
@@ -945,7 +905,7 @@ def combineMosfetsInplace(nlist):
             if m.combine(x):
                 n += 1
                 fets.remove(x)
-                nlist.deck.remove(x)
+                nlist.removeElement(x)
 
     return n
 #@-node:combineMosfetsInplace
@@ -980,71 +940,72 @@ def unit(s):
 #@+node:debug
 def debug(message):
     """Print debugging info to stderr."""
-    print>>stderr,'Debug:',message
+    for m in message.split('\n'):
+        if m:
+            print>>stderr, 'Debug:', m
 #@-node:debug
 #@+node:info
 def info(message):
     """Print information to stderr."""
-    print>>stderr,'Info:',message
+    for m in message.split('\n'):
+        if m:
+            print>>stderr, 'Info:', m
 #@-node:info
 #@+node:warning
-def warning(message,elm=None,num=None):
+def warning(message, elm=None, num=None):
     """Print warning to stderr.  If elm and num defined,
     print different message"""
     if elm and num:
-        message=_opt.infile+":"+str(num)+" '"+elm+\
+        message = _opt.infile+":"+str(num)+" '"+elm+\
                 "' type not defined yet, passing through..."
-    print>>stderr,'Warning:',message
+    print>>stderr, 'Warning:', message
 #@-node:warning
 #@-node:helpers
 #@+node:main
 def main():
     global _opt
     opt = options()
-    _opt=opt
+    _opt = opt
 
-    print>>ofp,"* pyspice.py %s: by Dan White <etihwnad@gmail.com>" % __version
-    print>>ofp,"* mail me bug reports, fixes, and comments if you find this useful"
-    print>>ofp,"* ----------------------------------------------------------------"
+    # output file header
+    print>>ofp, "* pyspice.py %s: by Dan White <etihwnad@gmail.com>" % __version__
+    print>>ofp, "* mail me bug reports, fixes, and comments if you find this useful"
+    print>>ofp, "* ----------------------------------------------------------------"
 
-    print>>stderr, 'reading in netlist...',
-    stderr.flush()
+    # Read and parse given input file (as top-level)
     netlist = Netlist(ifp)
-    print>>stderr, 'done'
 
+    # Show input statistics
+    if opt.v:
+        info('Read in %i elements' % len(netlist.deck))
+        s = StringIO()
+        print>>s, 'Input Element counts:'
+        for t, v in netlist.elements.iteritems():
+            if len(v):
+                print>>s, '%s: %i' % (t, len(v))
+        info(s.getvalue())
+
+
+    # Combine elements if requested
     nCombined = dict()
+    if opt.combine_c:
+        nCombined['c'] = combineCapacitorsInplace(netlist)
+        if opt.v:
+            info('Combined %i capacitors' % nCombined['c'])
 
-    print>>stderr, 'combining capacitors...',
-    stderr.flush()
-    nCombined['c'] = combineCapacitorsInplace(netlist)
-    print>>stderr, 'done'
+    if opt.combine_m:
+        nCombined['m'] = combineMosfetsInplace(netlist)
+        if opt.v:
+            info('Combined %i mosfets' % nCombined['m'])
 
-    print>>stderr, 'combining mosfets...',
-    stderr.flush()
-    nCombined['m'] = combineMosfetsInplace(netlist)
-    print>>stderr, 'done'
-
-    print '* Elements combined:'
-    for k,v in nCombined.iteritems():
-        print '%s: %3i' % (k, v)
-
-
-    elementCounts = dict()
-    for e in netlist.deck:
-        if e.type in elementCounts:
-            elementCounts[e.type] += 1
-        else:
-            elementCounts[e.type] = 1
-        print>>ofp, e
-
-    print '*\n* Output Element counts'
-    for t in elementCounts.keys():
-        print '*', t, '-', elementCounts[t]
-
-    for k,v in netlist.elements.iteritems():
-        print k,str(v)
-
-
+    # Show output statistics
+    if opt.v:
+        s = StringIO()
+        print>>s, 'Output Element counts:'
+        for t, v in netlist.elements.iteritems():
+            if len(v):
+                print>>s, '%s: %i' % (t, len(v))
+        info(s.getvalue())
 #@-node:main
 #@-others
 

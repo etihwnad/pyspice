@@ -17,7 +17,7 @@ import unittest
 from decimal import Decimal as D
 
 #@+others
-#@+node:converstions
+#@+node:unit conversions
 
 class unitConversion(unittest.TestCase):
     """Tests conversion between SPICE string and Decimal number."""
@@ -45,7 +45,7 @@ class unitConversion(unittest.TestCase):
         """unit() should fail with bad input"""
         for s in self.badValues:
             self.assertRaises(pyspice.BadUnitError, pyspice.unit, s)
-#@-node:converstions
+#@-node:unit conversions
 #@+node:netlist parsing
 
 class netlistParsing(unittest.TestCase):
