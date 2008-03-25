@@ -15,12 +15,13 @@
 </v>
 <v t="dan.20070210134929" tnodeList="dan.20070210134929"><vh>@file HISTORY</vh></v>
 <v t="dan.20070210134747" tnodeList="dan.20070210134747"><vh>@file README</vh></v>
-<v t="etihwnad.20060606092308.1" tnodeList="etihwnad.20060606092308.1,etihwnad.20060605200356.2,etihwnad.20060605202504,etihwnad.20060605201903,dan.20061011115934,dan.20061111103052,dan.20061011120652,dan.20061011120117,etihwnad.20060605210612,etihwnad.20060605205852,etihwnad.20060609195838,etihwnad.20060605200356.36,etihwnad.20060605211347,dan.20070113152139,dan.20070113152139.1,etihwnad.20060605200356.32,etihwnad.20060605200356.33,etihwnad.20060605200356.34,dan.20061229140222,dan.20061229141817,dan.20080323201044,dan.20061229215859,dan.20061229142604,dan.20061229142423,dan.20080323183246,dan.20061229141501,dan.20080325131728,dan.20061229231842,dan.20061229231842.1,dan.20061229231842.2,dan.20061008213431,etihwnad.20060605200356.3,etihwnad.20060605200356.4,etihwnad.20060605200356.5,etihwnad.20060605200356.6,etihwnad.20060605200356.11,etihwnad.20060605200356.12,etihwnad.20060605200356.13,etihwnad.20060605200356.14,dan.20061008213532,dan.20061008213532.1,dan.20061008213532.2,dan.20061008214054,dan.20061008214054.1,dan.20061008214054.2,dan.20061008213431.1,etihwnad.20060605200356.7,etihwnad.20060605200356.8,etihwnad.20060605200356.9,etihwnad.20060605200356.10,etihwnad.20060605200356.15,etihwnad.20060605200356.16,etihwnad.20060605200356.17,etihwnad.20060605200356.18,etihwnad.20060612195947,etihwnad.20060612195947.1,etihwnad.20060612195947.2,etihwnad.20060612195947.3,etihwnad.20060605200356.19,etihwnad.20060605200356.20,etihwnad.20060605200356.21,etihwnad.20060605200356.22,etihwnad.20060605200356.23,etihwnad.20060605200356.24,etihwnad.20060605200356.25,dan.20061008213903,dan.20061008213903.1,dan.20061008213936,dan.20061008213936.1,dan.20080323214255,dan.20080323214255.1,dan.20080323223326,etihwnad.20060609195838.1,etihwnad.20060612075426,etihwnad.20060605200356.27,etihwnad.20060605200356.26,etihwnad.20060605200356.28,dan.20080323201405"><vh>@file pyspice.py</vh>
-<v t="etihwnad.20060605200356.2"><vh>&lt;&lt; head docstring&gt;&gt;</vh>
+<v t="etihwnad.20060606092308.1" a="E" tnodeList="etihwnad.20060606092308.1,etihwnad.20060605200356.2,etihwnad.20060605202504,etihwnad.20060605201903,dan.20061011115934,dan.20061111103052,dan.20080325141426,dan.20061011120652,dan.20061011120117,etihwnad.20060605210612,etihwnad.20060605205852,etihwnad.20060609195838,etihwnad.20060605200356.36,etihwnad.20060605211347,dan.20070113152139,dan.20070113152139.1,etihwnad.20060605200356.32,etihwnad.20060605200356.33,etihwnad.20060605200356.34,dan.20061229140222,dan.20061229141817,dan.20080323201044,dan.20061229215859,dan.20061229142604,dan.20061229142423,dan.20080323183246,dan.20061229141501,dan.20080325131728,dan.20061229231842,dan.20061229231842.1,dan.20061229231842.2,dan.20061008213431,etihwnad.20060605200356.3,etihwnad.20060605200356.4,etihwnad.20060605200356.5,etihwnad.20060605200356.6,etihwnad.20060605200356.11,etihwnad.20060605200356.12,etihwnad.20060605200356.13,etihwnad.20060605200356.14,dan.20061008213532,dan.20061008213532.1,dan.20061008213532.2,dan.20061008214054,dan.20061008214054.1,dan.20061008214054.2,dan.20061008213431.1,etihwnad.20060605200356.7,etihwnad.20060605200356.8,etihwnad.20060605200356.9,etihwnad.20060605200356.10,etihwnad.20060605200356.15,etihwnad.20060605200356.16,etihwnad.20060605200356.17,etihwnad.20060605200356.18,etihwnad.20060612195947,etihwnad.20060612195947.1,etihwnad.20060612195947.2,etihwnad.20060612195947.3,etihwnad.20060605200356.19,etihwnad.20060605200356.20,etihwnad.20060605200356.21,etihwnad.20060605200356.22,etihwnad.20060605200356.23,etihwnad.20060605200356.24,etihwnad.20060605200356.25,dan.20061008213903,dan.20061008213903.1,dan.20061008213936,dan.20061008213936.1,dan.20080323214255,dan.20080323214255.1,dan.20080323223326,etihwnad.20060609195838.1,etihwnad.20060612075426,etihwnad.20060605200356.27,etihwnad.20060605200356.26,etihwnad.20060605200356.28,dan.20080323201405"><vh>@nosent pyspice.py</vh>
+<v t="etihwnad.20060605200356.2" a="E"><vh>&lt;&lt; head docstring&gt;&gt;</vh>
 <v t="etihwnad.20060605202504"><vh>&lt;&lt; head &gt;&gt;</vh></v>
 <v t="etihwnad.20060605201903"><vh>&lt;&lt; copyright &gt;&gt;</vh></v>
-<v t="dan.20061011115934"><vh>&lt;&lt; release notes &gt;&gt;</vh>
-<v t="dan.20061111103052"><vh>v0.2a</vh></v>
+<v t="dan.20061011115934" a="E"><vh>&lt;&lt; release notes &gt;&gt;</vh>
+<v t="dan.20061111103052" a="TV"><vh>v0.3</vh></v>
+<v t="dan.20080325141426"><vh>v0.2a</vh></v>
 <v t="dan.20061011120652"><vh>v0.2</vh></v>
 <v t="dan.20061011120117"><vh>v0.1</vh></v>
 </v>
@@ -118,11 +119,11 @@
 </v>
 <v t="dan.20080323201405"><vh>main</vh></v>
 </v>
-<v t="dan.20070113143715" a="E" tnodeList="dan.20070113143715,dan.20070113145158,dan.20070113154450"><vh>@file test_pyspice.py</vh>
-<v t="dan.20070113145158" a="TV"><vh>unit conversions</vh></v>
+<v t="dan.20070113143715" tnodeList="dan.20070113143715,dan.20070113145158,dan.20070113154450"><vh>@file test_pyspice.py</vh>
+<v t="dan.20070113145158"><vh>unit conversions</vh></v>
 <v t="dan.20070113154450"><vh>netlist parsing</vh></v>
 </v>
-<v t="dan.20080324085048"><vh>old</vh>
+<v t="dan.20080324085048" a="E"><vh>old</vh>
 <v t="etihwnad.20060605200356.35"><vh>classify</vh></v>
 <v t="etihwnad.20060605200356.29"><vh>drop_2node</vh></v>
 <v t="etihwnad.20060605200356.37"><vh>old_main</vh></v>
@@ -274,9 +275,11 @@ NOTE: For combining, this uses a global node name scheme.  In other
     hierarchy implemented. 
 
 </t>
-<t tx="dan.20061111103052">pyspice.py v0.2a:
+<t tx="dan.20061111103052">pyspice.py v0.3:
 ----------------
--added a missing newline before an import statement
+-entire netlist is held in the top level Netlist object
+-temporarily does not drop small capacitors
+-code cleanup
 
 </t>
 <t tx="dan.20061229140222">
@@ -486,7 +489,8 @@ def massageLine(self, line):
 <t tx="dan.20080323201044">def _addMassagedLine(self, line):
     """Add the given non-empty line to netlist.  Assumes the line has already
     been massaged."""
-    self.lines.append(line)</t>
+    self.lines.append(line)
+</t>
 <t tx="dan.20080323201405">def main():
     global _opt
     opt = options()
@@ -574,7 +578,13 @@ def massageLine(self, line):
 <t tx="dan.20080324085048"></t>
 <t tx="dan.20080325131728">def removeElement(self, element):
     self.deck.remove(element)
-    self.elements[element.type].remove(element)</t>
+    self.elements[element.type].remove(element)
+</t>
+<t tx="dan.20080325141426">pyspice.py v0.2a:
+----------------
+-added a missing newline before an import statement
+
+</t>
 <t tx="etihwnad.20060605200356.2">"""
 &lt;&lt; head &gt;&gt;
 &lt;&lt; copyright &gt;&gt;
@@ -1329,7 +1339,7 @@ Licensed by the GPL, see http://www.whiteaudio.com/soft/COPYING or the current
 GNU GPL license for details.
 
 </t>
-<t tx="etihwnad.20060605202504">pyspice.py v0.2a
+<t tx="etihwnad.20060605202504">pyspice.py v0.3
 
 SPICE pre-processor that combines parallel elements (e.g. capacitors, mosfets)
 for GREATLY reduced simulation time.  Uses the 'M' parameter of MOSFETS
@@ -1410,7 +1420,8 @@ _ncombine_res = 0
 # -not implemented yet
 _current_scope = ''
 </t>
-<t tx="etihwnad.20060605210612">##
+<t tx="etihwnad.20060605210612">
+##
 # Global imports
 ##
 import getopt
@@ -1432,7 +1443,7 @@ except:
 @language python
 @tabwidth -4
 
-__version__ = '0.2a'
+__version__ = '0.3'
 
 &lt;&lt; head docstring &gt;&gt;
 &lt;&lt; global imports &gt;&gt;

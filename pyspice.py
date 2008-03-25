@@ -1,18 +1,9 @@
 #!/usr/bin/env python
-#@+leo-ver=4
-#@+node:@file pyspice.py
-#@@first
-#@@language python
-#@@tabwidth -4
 
-__version__ = '0.2a'
+__version__ = '0.3'
 
-#@<< head docstring >>
-#@+node:<< head docstring>>
 """
-#@<< head >>
-#@+node:<< head >>
-pyspice.py v0.2a
+pyspice.py v0.3
 
 SPICE pre-processor that combines parallel elements (e.g. capacitors, mosfets)
 for GREATLY reduced simulation time.  Uses the 'M' parameter of MOSFETS
@@ -25,29 +16,23 @@ faster.
   pyspice.py [options] [-i infile] [-o outfile]
 
  Use pyspice.py -h for all the options.
-#@-node:<< head >>
-#@nl
-#@<< copyright >>
-#@+node:<< copyright >>
 Copyright Dan White 2006-8
 
 Licensed by the GPL, see http://www.whiteaudio.com/soft/COPYING or the current
 GNU GPL license for details.
 
-#@-node:<< copyright >>
-#@nl
-#@<< release notes >>
-#@+node:<< release notes >>
 Release Notes, changelog
 -----------------------------------------------------
-#@+others
-#@+node:v0.2a
+pyspice.py v0.3:
+----------------
+-entire netlist is held in the top level Netlist object
+-temporarily does not drop small capacitors
+-code cleanup
+
 pyspice.py v0.2a:
 ----------------
 -added a missing newline before an import statement
 
-#@-node:v0.2a
-#@+node:v0.2
 pyspice.py v0.2:
 ----------------
 -At least default (pass through) handling of all element types.
@@ -60,24 +45,12 @@ NOTE: For combining, this uses a global node name scheme.  In other
 -Work is ongoing on the class structure and most important IMO is getting netlist
     hierarchy implemented. 
 
-#@-node:v0.2
-#@+node:v0.1
 pyspice v0.1:
 -------------
 Initial release.
 Only worked for netlist containing MOSFETs and Capacitors.
-#@-node:v0.1
-#@-others
-#@-node:<< release notes >>
-#@nl
-#@+others
-#@-others
 """
-#@@nocolor
-#@-node:<< head docstring>>
-#@nl
-#@<< global imports >>
-#@+node:<< global imports >>
+
 ##
 # Global imports
 ##
@@ -94,10 +67,6 @@ try:
     from cStringIO import StringIO as StringIO
 except:
     from StringIO import StringIO as StringIO
-#@-node:<< global imports >>
-#@nl
-#@<< global vars >>
-#@+node:<< global vars >>
 ##
 # Global Shorthands
 ##
@@ -117,23 +86,16 @@ _ncombine_res = 0
 #namespace tracking
 # -not implemented yet
 _current_scope = ''
-#@-node:<< global vars >>
-#@nl
 
-#@+at
 # Debug options: string of debugging elements to print
 # * - comments
 # follow SPICE element names (c-capacitor, l-inductor)
-#@-at
-#@@c
 dbg = ''
 
-#@+others
-#@+node:Option processing
-#@+node:options
 ##
 # Fancy option processing
 ##
+
 def options(args=sys.argv):
     """Define options and parse argument list.
     """
@@ -211,39 +173,24 @@ def options(args=sys.argv):
 
     return opt
 
-#@-node:options
-#@-node:Option processing
-#@+node:classes
-#@+node:exceptions
 
 class PyspiceError(Exception):
     '''Base exception for pyspice'''
     pass
-#@+node:class UnitError
 
 class BadUnitError(PyspiceError):
     pass
 
-#@-node:class UnitError
-#@+node:class ElementError
 
 class ElementError(LookupError):
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, elm='???'):
         self.elm = elm
 
-    #@-node:__init__
-    #@+node:__str__
     def __str__(self):
         return str('No class defined for this element: '+self.elm)
 
-    #@-node:__str__
-    #@-others
 
-#@-node:class ElementError
-#@-node:exceptions
-#@+node:class Netlist
 
 class Netlist:
     """Base class that holds an entire netlist.
@@ -256,8 +203,7 @@ class Netlist:
             -take care of hierarchy
             -source other files
     """
-    #@    @+others
-    #@+node:__init__
+
     def __init__(self, fname=None, title=None):
         """Optionally reads a netlist from a file"""
         self.deck = []
@@ -270,20 +216,16 @@ class Netlist:
 
         if fname:
             self.readfile(fname)
-    #@-node:__init__
-    #@+node:_addMassagedLine
+
     def _addMassagedLine(self, line):
         """Add the given non-empty line to netlist.  Assumes the line has already
         been massaged."""
         self.lines.append(line)
-    #@nonl
-    #@-node:_addMassagedLine
-    #@+node:addElement
+
     def addElement(self, element):
         self.deck.append(element)
         self.elements[element.type].append(element)
-    #@-node:addElement
-    #@+node:addLine
+
     def addLine(self, line):
         """Add the given non-empty line to netlist after massaging"""
         if line:
@@ -293,13 +235,10 @@ class Netlist:
             else:
                 line = self.massageLine(line)
                 self._addMassagedLine(line)
-    #@-node:addLine
-    #@+node:classify
+
     def classify(self, line, num=None):
         """Takes a line and creates an appropriate SpiceElement"""
         return _elementHandler.handler[line[0][0]](line, num=num)
-    #@-node:classify
-    #@+node:massageLine
     #finds a "name = value" pair for shrinking
     RE_PARAM = re.compile(r"(\S*)\s*=\s*(\S*)")
 
@@ -327,8 +266,7 @@ class Netlist:
         line = self.RE_PARAM.sub(r'\1=\2', line)
 
         return line
-    #@-node:massageLine
-    #@+node:readfile
+
     def readfile(self, fname):
         """Read a SPICE netlist from the open file pointer into the netlist.
 
@@ -370,42 +308,27 @@ class Netlist:
             self._addMassagedLine(mLine)
             self.addElement(self.classify(mLine, num=n))
             currentCard = line
-    #@-node:readfile
-    #@+node:removeElement
+
     def removeElement(self, element):
         self.deck.remove(element)
         self.elements[element.type].remove(element)
-    #@nonl
-    #@-node:removeElement
-    #@-others
-#@-node:class Netlist
-#@+node:class ElementHandler
+
 class ElementHandler:
-    #@    @+others
-    #@+node:__init__
+
     def __init__(self):
         self.validTypes = '*.abcdefghijklmnopqrstuvwxyz'
         self.handler = dict()
         for t in self.validTypes:
             self.handler[t] = SpiceElement
-    #@-node:__init__
-    #@+node:add_handler
+
     def add_handler(self, type, handler):
         """Replaces the existing element object definition with the
         given one"""
         self.handler[type] = handler
-    #@-node:add_handler
-    #@-others
-#@-node:class ElementHandler
-#@+node:base classes
-#@+at
 # These classes are used to break down the spectrum of SPICE elements
 # into 'classes' of elements.  I.e. 2 node passives, 2-node sources, 4-node 
 # sources,
 # and so on.  The elements found in a real netlist are based on these types.
-#@-at
-#@@c
-#@+node:class SpiceElement
 
 class SpiceElement:
     """Base class for SPICE elements.
@@ -414,8 +337,7 @@ class SpiceElement:
         __str__(self) -> string spice line
         drop() -> False
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num=None):
         """SpiceElement constructor
         line - netlist expanded line
@@ -428,20 +350,14 @@ class SpiceElement:
         self.type = 'spice'
         self.typeName = 'SpiceElement'
         self.num = num
-    #@-node:__init__
-    #@+node:__str__
+
     def __str__(self):
         return _wrapper.fill(self.line)
-    #@-node:__str__
-    #@+node:drop
+
     def drop(self, val=0, mode='<'):
         """Template for dropping elements that defaults to NO if
         not overidden in the element class"""
         return False
-    #@-node:drop
-    #@-others
-#@-node:class SpiceElement
-#@+node:class Passive2NodeElement
 
 class Passive2NodeElement(SpiceElement):
     """Base class for 2-node elements.
@@ -452,8 +368,7 @@ class Passive2NodeElement(SpiceElement):
     Redefines:
         drop(self, val, mode) -> bool
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = 'passive2'
@@ -467,8 +382,7 @@ class Passive2NodeElement(SpiceElement):
         for p in arr[4:]:
             k, v = p.split('=')
             self.param[k] = unit(v)
-    #@-node:__init__
-    #@+node:__str__
+
     def __str__(self):
         """Returns the netlist-file representation of this element"""
         s = StringIO()
@@ -479,8 +393,7 @@ class Passive2NodeElement(SpiceElement):
             print>>s, k+'='+str(v),
 
         return _wrapper.fill(s.getvalue())
-    #@-node:__str__
-    #@+node:drop
+
     def drop(self, val=0.0, mode='<'):
         """Indicate whether to drop the element from the list.
         Occurs iff (val 'mode' self.value)
@@ -500,10 +413,6 @@ class Passive2NodeElement(SpiceElement):
         else:
             return False
         return False #shouldn't get here, but...
-    #@-node:drop
-    #@-others
-#@-node:class Passive2NodeElement
-#@+node:class Active2NodeElement
 
 class Active2NodeElement(SpiceElement):
     """Base class for active 2-node elements.
@@ -514,8 +423,7 @@ class Active2NodeElement(SpiceElement):
     Redefines:
         None
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = 'active2'
@@ -529,8 +437,7 @@ class Active2NodeElement(SpiceElement):
         for p in arr[4:]:
             k, v = p.split('=')
             self.param[k] = unit(v)
-    #@-node:__init__
-    #@+node:__str__
+
     def __str__(self):
         """Returns the netlist-file representation of this element"""
         s = StringIO()
@@ -541,10 +448,6 @@ class Active2NodeElement(SpiceElement):
             print>>s, k + '=' + str(v),
 
         return _wrapper.fill(s.getvalue())
-    #@-node:__str__
-    #@-others
-#@-node:class Active2NodeElement
-#@+node:class Active4NodeElement
 
 class Active4NodeElement(SpiceElement):
     """Base class for active 4-node elements (xCyS).
@@ -555,8 +458,7 @@ class Active4NodeElement(SpiceElement):
     Redefines:
         None
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = 'active4'
@@ -572,8 +474,7 @@ class Active4NodeElement(SpiceElement):
         for p in arr[6:]:
             k, v = p.split('=')
             self.param[k] = unit(v)
-    #@-node:__init__
-    #@+node:__str__
+
     def __str__(self):
         s = StringIO()
         print>>s, self.name, self.n1, self.n2, self.n3, self.n4, self.value,
@@ -582,37 +483,23 @@ class Active4NodeElement(SpiceElement):
             #if v == 0: continue
             print>>s, k + '=' + str(v),
         return _wrapper.fill(s.getvalue())
-    #@-node:__str__
-    #@-others
-#@-node:class Active4NodeElement
-#@-node:base classes
-#@+node:element classes
-#@+at
 # This is a(n incomplete) definition of the various SPICE elements.
 # 
 # NOTE: When adding a new element type definition, be sure to add a handler
 #   for the new class after defining the class using:
 #       elements.add_handler('x', Xdevice)
-#@-at
-#@@c
 #make a repository for element handlers
 _elementHandler = ElementHandler()
-#@+node:class CommentLine
 
 class CommentLine(SpiceElement):
     """SPICE Comment line (/^\*.*/)
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = '*'
         self.typeName = ''
-    #@-node:__init__
-    #@-others
 _elementHandler.add_handler('*', CommentLine)
-#@-node:class CommentLine
-#@+node:class ControlElement
 
 class ControlElement(SpiceElement):
     """Control statement object, no processing for now.
@@ -621,17 +508,12 @@ class ControlElement(SpiceElement):
     Note: currently has no knowledge of blocks (.lib/.endl, .subckt/.ends)
     has only ONE node namespace, make sure subckt's have unique node names!
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = '.'
         self.typeName = 'ControlElement'
-    #@-node:__init__
-    #@-others
 _elementHandler.add_handler('.', ControlElement)
-#@-node:class ControlElement
-#@+node:class Capacitor
 
 class Capacitor(Passive2NodeElement):
     """Assumes SPICE element line:
@@ -641,14 +523,12 @@ class Capacitor(Passive2NodeElement):
         isparallel(other)
         combine(other)
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         Passive2NodeElement.__init__(self, line, num)
         self.type = 'c'
         self.typeName = 'Capacitor'
-    #@-node:__init__
-    #@+node:isparallel
+
     def isparallel(self, other):
         """Returns True if instance is parallel with other instance
         """
@@ -658,8 +538,7 @@ class Capacitor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:isparallel
-    #@+node:combine
+
     def combine(self, other):
         """Adds values if capacitors are in parallel, returns True if
         it combined them.
@@ -675,11 +554,7 @@ class Capacitor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:combine
-    #@-others
 _elementHandler.add_handler('c', Capacitor)
-#@-node:class Capacitor
-#@+node:class Inductor
 
 class Inductor(Passive2NodeElement):
     """Assumes SPICE element line:
@@ -689,14 +564,12 @@ class Inductor(Passive2NodeElement):
         isparallel(other)
         combine(other)
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         Passive2NodeElement.__init__(self, line, num)
         self.type = 'l'
         self.typeName = 'Inductor'
-    #@-node:__init__
-    #@+node:isparallel
+
     def isparallel(self, other):
         """Returns True if instance is parallel with other instance
         """
@@ -706,8 +579,7 @@ class Inductor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:isparallel
-    #@+node:combine
+
     def combine(self, other):
         """Combines values if inductors are in parallel, returns True if
         it combined them.
@@ -723,18 +595,13 @@ class Inductor(Passive2NodeElement):
             return True
         else:
             return False
-    #@-node:combine
-    #@-others
 _elementHandler.add_handler('l', Inductor)
-#@-node:class Inductor
-#@+node:class Mosfet
 
 class Mosfet(SpiceElement):
     """Mosfet constructor takes an array derived from the
     netlist line
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         if isinstance(line, str):
             line = line.split()
@@ -753,8 +620,7 @@ class Mosfet(SpiceElement):
             self.param[k] = unit(v)
         self.w = self.param['w']
         self.l = self.param['l']
-    #@-node:__init__
-    #@+node:__str__
+
     def __str__(self):
         s = StringIO()
         print>>s, self.line[0], self.d, self.g, self.s, self.b, self.model,
@@ -762,8 +628,7 @@ class Mosfet(SpiceElement):
             if v == 0: continue
             print>>s, k + '=' + str(v),
         return _wrapper.fill(s.getvalue())
-    #@-node:__str__
-    #@+node:isparallel
+
     def isparallel(self, other):
         """Returns True if transistors are parallel
         """
@@ -779,8 +644,6 @@ class Mosfet(SpiceElement):
         else:
             return False
 
-    #@-node:isparallel
-    #@+node:combine
     def combine(self, other):
         """Combines adds other to self iff the transistors are identical,
         will NOT combine if W/L is different.  Parameter 'M' is incremented on
@@ -811,65 +674,44 @@ class Mosfet(SpiceElement):
                 return True
         else:
             return False
-    #@-node:combine
-    #@-others
 _elementHandler.add_handler('m', Mosfet)
-#@-node:class Mosfet
-#@+node:class Resistor
 
 class Resistor(Passive2NodeElement):
     """Assumes SPICE element line:
 
     rXXX n1 n2 value p1=val p2=val ...
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         Passive2NodeElement.__init__(self, line, num)
         self.type = 'r'
         self.typeName = 'Resistor'
-    #@-node:__init__
-    #@-others
 _elementHandler.add_handler('r', Resistor)
-#@-node:class Resistor
-#@+node:class Vsource
 
 class Vsource(Active2NodeElement):
     """Assumes SPICE element line:
 
     vXXX n1 n2 value p1=val p2=val ...
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         Active2NodeElement.__init__(self, line, num)
         self.type = 'v'
         self.typeName = 'Vsource'
-    #@-node:__init__
-    #@-others
 _elementHandler.add_handler('v', Vsource)
-#@-node:class Vsource
-#@+node:class Isource
 
 class Isource(Active2NodeElement):
     """Assumes SPICE element line:
 
     iXXX n1 n2 value p1=val p2=val ...
     """
-    #@	@+others
-    #@+node:__init__
+
     def __init__(self, line, num):
         Active2NodeElement.__init__(self, line, num)
         self.type = 'i'
         self.typeName = 'Isource'
-    #@-node:__init__
-    #@-others
 _elementHandler.add_handler('i', Isource)
-#@-node:class Isource
-#@-node:element classes
-#@-node:classes
-#@+node:functions
-#@+node:combineCapacitorsInplace
+
 def combineCapacitorsInplace(nlist):
     '''Finds all parallel capacitors and replaces each with a single element
     of equivalent value.  The capacitor is named by the first-occuring name.
@@ -892,8 +734,7 @@ def combineCapacitorsInplace(nlist):
                 nlist.removeElement(x)
 
     return n
-#@-node:combineCapacitorsInplace
-#@+node:combineMosfetsInplace
+
 def combineMosfetsInplace(nlist):
     '''TODO'''
 
@@ -908,11 +749,8 @@ def combineMosfetsInplace(nlist):
                 nlist.removeElement(x)
 
     return n
-#@-node:combineMosfetsInplace
-#@-node:functions
-#@+node:helpers
-#@+node:unit
 RE_UNIT = re.compile(r'^([0-9e\+\-\.]+)(t|g|meg|x|k|mil|m|u|n|p|f)?')
+
 def unit(s):
     """Takes a string and returns the equivalent float.
     '3.0u' -> 3.0e-6"""
@@ -936,22 +774,19 @@ def unit(s):
             return Decimal(m.group(1))
     except:
         raise BadUnitError
-#@-node:unit
-#@+node:debug
+
 def debug(message):
     """Print debugging info to stderr."""
     for m in message.split('\n'):
         if m:
             print>>stderr, 'Debug:', m
-#@-node:debug
-#@+node:info
+
 def info(message):
     """Print information to stderr."""
     for m in message.split('\n'):
         if m:
             print>>stderr, 'Info:', m
-#@-node:info
-#@+node:warning
+
 def warning(message, elm=None, num=None):
     """Print warning to stderr.  If elm and num defined,
     print different message"""
@@ -959,9 +794,7 @@ def warning(message, elm=None, num=None):
         message = _opt.infile+":"+str(num)+" '"+elm+\
                 "' type not defined yet, passing through..."
     print>>stderr, 'Warning:', message
-#@-node:warning
-#@-node:helpers
-#@+node:main
+
 def main():
     global _opt
     opt = options()
@@ -1006,11 +839,7 @@ def main():
             if len(v):
                 print>>s, '%s: %i' % (t, len(v))
         info(s.getvalue())
-#@-node:main
-#@-others
 
 #magic script-maker
 if __name__ == '__main__':
     main()
-#@-node:@file pyspice.py
-#@-leo
