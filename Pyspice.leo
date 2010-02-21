@@ -2,24 +2,24 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.287401574803">
-	<global_window_position top="0" left="0" height="687" width="1276"/>
+<globals body_outline_ratio="0.5">
+	<global_window_position top="23" left="4" height="695" width="1016"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
 <find_panel_settings/>
 <vnodes>
-<v t="dan.20080319143651" str_leo_pos="4,6,0"><vh>@chapters</vh></v>
+<v t="dan.20080319143651" str_leo_pos="4,4,4,4,0"><vh>@chapters</vh></v>
 <v t="dan.20070210134628" tnodeList="dan.20070210134628,etihwnad.20060605202632.1"><vh>@file Roadmap</vh>
 <v t="etihwnad.20060605202632.1"><vh>todo</vh></v>
 </v>
 <v t="dan.20070210134929" tnodeList="dan.20070210134929"><vh>@file HISTORY</vh></v>
 <v t="dan.20070210134747" tnodeList="dan.20070210134747"><vh>@file README</vh></v>
-<v t="etihwnad.20060606092308.1" a="E" tnodeList="etihwnad.20060606092308.1,etihwnad.20060605200356.2,etihwnad.20060605202504,etihwnad.20060605201903,dan.20061011115934,dan.20061111103052,dan.20080325141426,dan.20061011120652,dan.20061011120117,etihwnad.20060605210612,etihwnad.20060605205852,etihwnad.20060609195838,etihwnad.20060605200356.36,etihwnad.20060605211347,dan.20070113152139,dan.20070113152139.1,etihwnad.20060605200356.32,etihwnad.20060605200356.33,etihwnad.20060605200356.34,dan.20061229140222,dan.20061229141817,dan.20080323201044,dan.20061229215859,dan.20061229142604,dan.20061229142423,dan.20080323183246,dan.20061229141501,dan.20080325131728,dan.20061229231842,dan.20061229231842.1,dan.20061229231842.2,dan.20061008213431,etihwnad.20060605200356.3,etihwnad.20060605200356.4,etihwnad.20060605200356.5,etihwnad.20060605200356.6,etihwnad.20060605200356.11,etihwnad.20060605200356.12,etihwnad.20060605200356.13,etihwnad.20060605200356.14,dan.20061008213532,dan.20061008213532.1,dan.20061008213532.2,dan.20061008214054,dan.20061008214054.1,dan.20061008214054.2,dan.20061008213431.1,etihwnad.20060605200356.7,etihwnad.20060605200356.8,etihwnad.20060605200356.9,etihwnad.20060605200356.10,etihwnad.20060605200356.15,etihwnad.20060605200356.16,etihwnad.20060605200356.17,etihwnad.20060605200356.18,etihwnad.20060612195947,etihwnad.20060612195947.1,etihwnad.20060612195947.2,etihwnad.20060612195947.3,etihwnad.20060605200356.19,etihwnad.20060605200356.20,etihwnad.20060605200356.21,etihwnad.20060605200356.22,etihwnad.20060605200356.23,etihwnad.20060605200356.24,etihwnad.20060605200356.25,dan.20061008213903,dan.20061008213903.1,dan.20061008213936,dan.20061008213936.1,dan.20080323214255,dan.20080323214255.1,dan.20080323223326,etihwnad.20060609195838.1,etihwnad.20060612075426,etihwnad.20060605200356.27,etihwnad.20060605200356.26,etihwnad.20060605200356.28,dan.20080323201405"><vh>@nosent pyspice.py</vh>
-<v t="etihwnad.20060605200356.2"><vh>&lt;&lt; head docstring&gt;&gt;</vh>
+<v t="etihwnad.20060606092308.1" a="E"><vh>@nosent pyspice.py</vh>
+<v t="etihwnad.20060605200356.2" a="E"><vh>&lt;&lt; head docstring&gt;&gt;</vh>
 <v t="etihwnad.20060605202504"><vh>&lt;&lt; head &gt;&gt;</vh></v>
 <v t="etihwnad.20060605201903"><vh>&lt;&lt; copyright &gt;&gt;</vh></v>
-<v t="dan.20061011115934" a="E"><vh>&lt;&lt; release notes &gt;&gt;</vh>
+<v t="dan.20061011115934"><vh>&lt;&lt; release notes &gt;&gt;</vh>
 <v t="dan.20061111103052"><vh>v0.3</vh></v>
 <v t="dan.20080325141426"><vh>v0.2a</vh></v>
 <v t="dan.20061011120652"><vh>v0.2</vh></v>
@@ -28,18 +28,18 @@
 </v>
 <v t="etihwnad.20060605210612"><vh>&lt;&lt; global imports &gt;&gt;</vh></v>
 <v t="etihwnad.20060605205852"><vh>&lt;&lt; global vars &gt;&gt;</vh></v>
-<v t="etihwnad.20060609195838"><vh>Option processing</vh>
+<v t="etihwnad.20060609195838" a="E"><vh>Option processing</vh>
 <v t="etihwnad.20060605200356.36"><vh>options</vh></v>
 </v>
 <v t="etihwnad.20060605211347" a="E"><vh>classes</vh>
 <v t="dan.20070113152139"><vh>exceptions</vh>
 <v t="dan.20070113152139.1"><vh>class UnitError</vh></v>
-<v t="etihwnad.20060605200356.32"><vh>class ElementError</vh>
+<v t="etihwnad.20060605200356.32" a="E"><vh>class ElementError</vh>
 <v t="etihwnad.20060605200356.33"><vh>__init__</vh></v>
 <v t="etihwnad.20060605200356.34"><vh>__str__</vh></v>
 </v>
 </v>
-<v t="dan.20061229140222"><vh>class Netlist</vh>
+<v t="dan.20061229140222" a="E"><vh>class Netlist</vh>
 <v t="dan.20061229141817"><vh>__init__</vh></v>
 <v t="dan.20080323201044"><vh>_addMassagedLine</vh></v>
 <v t="dan.20061229215859"><vh>addElement</vh></v>
@@ -53,13 +53,13 @@
 <v t="dan.20061229231842.1"><vh>__init__</vh></v>
 <v t="dan.20061229231842.2"><vh>add_handler</vh></v>
 </v>
-<v t="dan.20061008213431"><vh>base classes</vh>
-<v t="etihwnad.20060605200356.3"><vh>class SpiceElement</vh>
+<v t="dan.20061008213431" a="E"><vh>base classes</vh>
+<v t="etihwnad.20060605200356.3" a="E"><vh>class SpiceElement</vh>
 <v t="etihwnad.20060605200356.4"><vh>__init__</vh></v>
 <v t="etihwnad.20060605200356.5"><vh>__str__</vh></v>
 <v t="etihwnad.20060605200356.6"><vh>drop</vh></v>
 </v>
-<v t="etihwnad.20060605200356.11"><vh>class Passive2NodeElement</vh>
+<v t="etihwnad.20060605200356.11" a="E"><vh>class Passive2NodeElement</vh>
 <v t="etihwnad.20060605200356.12"><vh>__init__</vh></v>
 <v t="etihwnad.20060605200356.13"><vh>__str__</vh></v>
 <v t="etihwnad.20060605200356.14"><vh>drop</vh></v>
@@ -73,7 +73,7 @@
 <v t="dan.20061008214054.2"><vh>__str__</vh></v>
 </v>
 </v>
-<v t="dan.20061008213431.1"><vh>element classes</vh>
+<v t="dan.20061008213431.1" a="E"><vh>element classes</vh>
 <v t="etihwnad.20060605200356.7"><vh>class CommentLine</vh>
 <v t="etihwnad.20060605200356.8"><vh>__init__</vh></v>
 </v>
@@ -90,7 +90,7 @@
 <v t="etihwnad.20060612195947.2"><vh>isparallel</vh></v>
 <v t="etihwnad.20060612195947.3"><vh>combine</vh></v>
 </v>
-<v t="etihwnad.20060605200356.19"><vh>class Mosfet</vh>
+<v t="etihwnad.20060605200356.19" a="E"><vh>class Mosfet</vh>
 <v t="etihwnad.20060605200356.20"><vh>__init__</vh></v>
 <v t="etihwnad.20060605200356.21"><vh>__str__</vh></v>
 <v t="etihwnad.20060605200356.22"><vh>isparallel</vh></v>
@@ -107,7 +107,7 @@
 </v>
 </v>
 </v>
-<v t="dan.20080323214255"><vh>functions</vh>
+<v t="dan.20080323214255" a="E"><vh>functions</vh>
 <v t="dan.20080323214255.1"><vh>combineCapacitorsInplace</vh></v>
 <v t="dan.20080323223326"><vh>combineMosfetsInplace</vh></v>
 </v>
@@ -353,7 +353,7 @@ class Netlist:
 </t>
 <t tx="dan.20061229142423">def classify(self, line, num=None):
     """Takes a line and creates an appropriate SpiceElement"""
-    return _elementHandler.handler[line[0][0]](line, num=num)
+    return _elementHandler.handler[line[0][0].lower()](line, num=num)
 </t>
 <t tx="dan.20061229142604">def addLine(self, line):
     """Add the given non-empty line to netlist after massaging"""
@@ -475,9 +475,14 @@ def massageLine(self, line):
     elif line[0] == '*':
         return line
 
-    #case is unimportant in SPICE
-    #lowercase all non-comment lines
-    line = line.lower()
+    if _opt == 'keep':
+        pass
+    elif _opt == 'lower':
+        #case is unimportant in SPICE
+        #lowercase all non-comment lines
+        line = line.lower()
+    elif _opt == 'upper':
+        line = line.upper()
 
     #remove whitespace in parameter assignments
     # to prepare for x.split(' ') that happens next:
@@ -497,7 +502,7 @@ def massageLine(self, line):
     _opt = opt
 
     # output file header
-    print&gt;&gt;ofp, "* pyspice.py %s: by Dan White &lt;etihwnad@gmail.com&gt;" % __version__
+    print&gt;&gt;ofp, "* pyspice.py %s: by Dan White &lt;dan@whiteaudio.com&gt;" % __version__
     print&gt;&gt;ofp, "* mail me bug reports, fixes, and comments if you find this useful"
     print&gt;&gt;ofp, "* ----------------------------------------------------------------"
 
@@ -535,6 +540,10 @@ def massageLine(self, line):
             if len(v):
                 print&gt;&gt;s, '%s: %i' % (t, len(v))
         info(s.getvalue())
+
+    for card in netlist.deck:
+        print&gt;&gt;ofp, card
+
 </t>
 <t tx="dan.20080323214255"></t>
 <t tx="dan.20080323214255.1">def combineCapacitorsInplace(nlist):
@@ -767,6 +776,7 @@ _elementHandler.add_handler('m', Mosfet)
     self.type = 'm'
     self.typeName = 'Mosfet'
     self.num = num
+    self.name = line[0]
     self.d = line[1]
     self.g = line[2]
     self.s = line[3]
@@ -775,14 +785,15 @@ _elementHandler.add_handler('m', Mosfet)
     self.param = dict()
     for p in line[6:]:
         k, v = p.split('=')
-        self.param[k] = unit(v)
+        self.param[k.lower()] = unit(v)
     self.w = self.param['w']
     self.l = self.param['l']
 </t>
 <t tx="etihwnad.20060605200356.21">def __str__(self):
     s = StringIO()
-    print&gt;&gt;s, self.line[0], self.d, self.g, self.s, self.b, self.model,
+    print&gt;&gt;s, self.name, self.d, self.g, self.s, self.b, self.model,
     for k, v in self.param.iteritems():
+        #TODO really kosher to ignore 0-values, careful of non-zero defaults
         if v == 0: continue
         print&gt;&gt;s, k + '=' + str(v),
     return _wrapper.fill(s.getvalue())
@@ -1251,6 +1262,10 @@ def options(args=sys.argv):
     parser.add_option('-w', '--linewidth', dest='linewidth', default=75,
                       help='Max. line width for netlist (default: %default)')
 
+    parser.add_option('--case', dest='case', action='store',
+                      choices=('keep', 'lower', 'upper'), default='keep',
+                      help='Modify capitalization of lines [keep, lower, upper] (default: %default)')
+
     (opt, args) = parser.parse_args()
 
     #infile
@@ -1273,7 +1288,7 @@ def options(args=sys.argv):
             ofp = open(opt.outfile, 'w')
             if opt.v: info('Output: ' + opt.outfile)
         except IOError, (errno, strerror):
-            print&gt;&gt;stderr, "IOError(%s): %s '%s'" % (errno, strerror, opt.infile)
+            print&gt;&gt;stderr, "IOError(%s): %s '%s'" % (errno, strerror, opt.outfile)
 
     #dropcap
     opt.dropcap = float(opt.dropcap)

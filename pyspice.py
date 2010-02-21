@@ -95,7 +95,6 @@ dbg = ''
 ##
 # Fancy option processing
 ##
-
 def options(args=sys.argv):
     """Define options and parse argument list.
     """
@@ -136,6 +135,10 @@ def options(args=sys.argv):
     parser.add_option('-w', '--linewidth', dest='linewidth', default=75,
                       help='Max. line width for netlist (default: %default)')
 
+    parser.add_option('--case', dest='case', action='store',
+                      choices=('keep', 'lower', 'upper'), default='keep',
+                      help='Modify capitalization of lines [keep, lower, upper] (default: %default)')
+
     (opt, args) = parser.parse_args()
 
     #infile
@@ -158,7 +161,7 @@ def options(args=sys.argv):
             ofp = open(opt.outfile, 'w')
             if opt.v: info('Output: ' + opt.outfile)
         except IOError, (errno, strerror):
-            print>>stderr, "IOError(%s): %s '%s'" % (errno, strerror, opt.infile)
+            print>>stderr, "IOError(%s): %s '%s'" % (errno, strerror, opt.outfile)
 
     #dropcap
     opt.dropcap = float(opt.dropcap)
@@ -183,7 +186,6 @@ class BadUnitError(PyspiceError):
 
 
 class ElementError(LookupError):
-
     def __init__(self, elm='???'):
         self.elm = elm
 
@@ -203,7 +205,6 @@ class Netlist:
             -take care of hierarchy
             -source other files
     """
-
     def __init__(self, fname=None, title=None):
         """Optionally reads a netlist from a file"""
         self.deck = []
@@ -216,16 +217,13 @@ class Netlist:
 
         if fname:
             self.readfile(fname)
-
     def _addMassagedLine(self, line):
         """Add the given non-empty line to netlist.  Assumes the line has already
         been massaged."""
         self.lines.append(line)
-
     def addElement(self, element):
         self.deck.append(element)
         self.elements[element.type].append(element)
-
     def addLine(self, line):
         """Add the given non-empty line to netlist after massaging"""
         if line:
@@ -235,10 +233,9 @@ class Netlist:
             else:
                 line = self.massageLine(line)
                 self._addMassagedLine(line)
-
     def classify(self, line, num=None):
         """Takes a line and creates an appropriate SpiceElement"""
-        return _elementHandler.handler[line[0][0]](line, num=num)
+        return _elementHandler.handler[line[0][0].lower()](line, num=num)
     #finds a "name = value" pair for shrinking
     RE_PARAM = re.compile(r"(\S*)\s*=\s*(\S*)")
 
@@ -256,9 +253,14 @@ class Netlist:
         elif line[0] == '*':
             return line
 
-        #case is unimportant in SPICE
-        #lowercase all non-comment lines
-        line = line.lower()
+        if _opt == 'keep':
+            pass
+        elif _opt == 'lower':
+            #case is unimportant in SPICE
+            #lowercase all non-comment lines
+            line = line.lower()
+        elif _opt == 'upper':
+            line = line.upper()
 
         #remove whitespace in parameter assignments
         # to prepare for x.split(' ') that happens next:
@@ -266,7 +268,6 @@ class Netlist:
         line = self.RE_PARAM.sub(r'\1=\2', line)
 
         return line
-
     def readfile(self, fname):
         """Read a SPICE netlist from the open file pointer into the netlist.
 
@@ -308,19 +309,15 @@ class Netlist:
             self._addMassagedLine(mLine)
             self.addElement(self.classify(mLine, num=n))
             currentCard = line
-
     def removeElement(self, element):
         self.deck.remove(element)
         self.elements[element.type].remove(element)
-
 class ElementHandler:
-
     def __init__(self):
         self.validTypes = '*.abcdefghijklmnopqrstuvwxyz'
         self.handler = dict()
         for t in self.validTypes:
             self.handler[t] = SpiceElement
-
     def add_handler(self, type, handler):
         """Replaces the existing element object definition with the
         given one"""
@@ -337,7 +334,6 @@ class SpiceElement:
         __str__(self) -> string spice line
         drop() -> False
     """
-
     def __init__(self, line, num=None):
         """SpiceElement constructor
         line - netlist expanded line
@@ -350,10 +346,8 @@ class SpiceElement:
         self.type = 'spice'
         self.typeName = 'SpiceElement'
         self.num = num
-
     def __str__(self):
         return _wrapper.fill(self.line)
-
     def drop(self, val=0, mode='<'):
         """Template for dropping elements that defaults to NO if
         not overidden in the element class"""
@@ -368,7 +362,6 @@ class Passive2NodeElement(SpiceElement):
     Redefines:
         drop(self, val, mode) -> bool
     """
-
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = 'passive2'
@@ -382,7 +375,6 @@ class Passive2NodeElement(SpiceElement):
         for p in arr[4:]:
             k, v = p.split('=')
             self.param[k] = unit(v)
-
     def __str__(self):
         """Returns the netlist-file representation of this element"""
         s = StringIO()
@@ -393,7 +385,6 @@ class Passive2NodeElement(SpiceElement):
             print>>s, k+'='+str(v),
 
         return _wrapper.fill(s.getvalue())
-
     def drop(self, val=0.0, mode='<'):
         """Indicate whether to drop the element from the list.
         Occurs iff (val 'mode' self.value)
@@ -423,7 +414,6 @@ class Active2NodeElement(SpiceElement):
     Redefines:
         None
     """
-
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = 'active2'
@@ -437,7 +427,6 @@ class Active2NodeElement(SpiceElement):
         for p in arr[4:]:
             k, v = p.split('=')
             self.param[k] = unit(v)
-
     def __str__(self):
         """Returns the netlist-file representation of this element"""
         s = StringIO()
@@ -458,7 +447,6 @@ class Active4NodeElement(SpiceElement):
     Redefines:
         None
     """
-
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = 'active4'
@@ -474,7 +462,6 @@ class Active4NodeElement(SpiceElement):
         for p in arr[6:]:
             k, v = p.split('=')
             self.param[k] = unit(v)
-
     def __str__(self):
         s = StringIO()
         print>>s, self.name, self.n1, self.n2, self.n3, self.n4, self.value,
@@ -494,7 +481,6 @@ _elementHandler = ElementHandler()
 class CommentLine(SpiceElement):
     """SPICE Comment line (/^\*.*/)
     """
-
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = '*'
@@ -508,7 +494,6 @@ class ControlElement(SpiceElement):
     Note: currently has no knowledge of blocks (.lib/.endl, .subckt/.ends)
     has only ONE node namespace, make sure subckt's have unique node names!
     """
-
     def __init__(self, line, num):
         SpiceElement.__init__(self, line, num)
         self.type = '.'
@@ -523,12 +508,10 @@ class Capacitor(Passive2NodeElement):
         isparallel(other)
         combine(other)
     """
-
     def __init__(self, line, num):
         Passive2NodeElement.__init__(self, line, num)
         self.type = 'c'
         self.typeName = 'Capacitor'
-
     def isparallel(self, other):
         """Returns True if instance is parallel with other instance
         """
@@ -538,7 +521,6 @@ class Capacitor(Passive2NodeElement):
             return True
         else:
             return False
-
     def combine(self, other):
         """Adds values if capacitors are in parallel, returns True if
         it combined them.
@@ -564,12 +546,10 @@ class Inductor(Passive2NodeElement):
         isparallel(other)
         combine(other)
     """
-
     def __init__(self, line, num):
         Passive2NodeElement.__init__(self, line, num)
         self.type = 'l'
         self.typeName = 'Inductor'
-
     def isparallel(self, other):
         """Returns True if instance is parallel with other instance
         """
@@ -579,7 +559,6 @@ class Inductor(Passive2NodeElement):
             return True
         else:
             return False
-
     def combine(self, other):
         """Combines values if inductors are in parallel, returns True if
         it combined them.
@@ -601,7 +580,6 @@ class Mosfet(SpiceElement):
     """Mosfet constructor takes an array derived from the
     netlist line
     """
-
     def __init__(self, line, num):
         if isinstance(line, str):
             line = line.split()
@@ -609,6 +587,7 @@ class Mosfet(SpiceElement):
         self.type = 'm'
         self.typeName = 'Mosfet'
         self.num = num
+        self.name = line[0]
         self.d = line[1]
         self.g = line[2]
         self.s = line[3]
@@ -617,18 +596,17 @@ class Mosfet(SpiceElement):
         self.param = dict()
         for p in line[6:]:
             k, v = p.split('=')
-            self.param[k] = unit(v)
+            self.param[k.lower()] = unit(v)
         self.w = self.param['w']
         self.l = self.param['l']
-
     def __str__(self):
         s = StringIO()
-        print>>s, self.line[0], self.d, self.g, self.s, self.b, self.model,
+        print>>s, self.name, self.d, self.g, self.s, self.b, self.model,
         for k, v in self.param.iteritems():
+            #TODO really kosher to ignore 0-values, careful of non-zero defaults
             if v == 0: continue
             print>>s, k + '=' + str(v),
         return _wrapper.fill(s.getvalue())
-
     def isparallel(self, other):
         """Returns True if transistors are parallel
         """
@@ -681,7 +659,6 @@ class Resistor(Passive2NodeElement):
 
     rXXX n1 n2 value p1=val p2=val ...
     """
-
     def __init__(self, line, num):
         Passive2NodeElement.__init__(self, line, num)
         self.type = 'r'
@@ -693,7 +670,6 @@ class Vsource(Active2NodeElement):
 
     vXXX n1 n2 value p1=val p2=val ...
     """
-
     def __init__(self, line, num):
         Active2NodeElement.__init__(self, line, num)
         self.type = 'v'
@@ -705,13 +681,11 @@ class Isource(Active2NodeElement):
 
     iXXX n1 n2 value p1=val p2=val ...
     """
-
     def __init__(self, line, num):
         Active2NodeElement.__init__(self, line, num)
         self.type = 'i'
         self.typeName = 'Isource'
 _elementHandler.add_handler('i', Isource)
-
 def combineCapacitorsInplace(nlist):
     '''Finds all parallel capacitors and replaces each with a single element
     of equivalent value.  The capacitor is named by the first-occuring name.
@@ -734,7 +708,6 @@ def combineCapacitorsInplace(nlist):
                 nlist.removeElement(x)
 
     return n
-
 def combineMosfetsInplace(nlist):
     '''TODO'''
 
@@ -750,7 +723,6 @@ def combineMosfetsInplace(nlist):
 
     return n
 RE_UNIT = re.compile(r'^([0-9e\+\-\.]+)(t|g|meg|x|k|mil|m|u|n|p|f)?')
-
 def unit(s):
     """Takes a string and returns the equivalent float.
     '3.0u' -> 3.0e-6"""
@@ -774,19 +746,16 @@ def unit(s):
             return Decimal(m.group(1))
     except:
         raise BadUnitError
-
 def debug(message):
     """Print debugging info to stderr."""
     for m in message.split('\n'):
         if m:
             print>>stderr, 'Debug:', m
-
 def info(message):
     """Print information to stderr."""
     for m in message.split('\n'):
         if m:
             print>>stderr, 'Info:', m
-
 def warning(message, elm=None, num=None):
     """Print warning to stderr.  If elm and num defined,
     print different message"""
@@ -794,14 +763,13 @@ def warning(message, elm=None, num=None):
         message = _opt.infile+":"+str(num)+" '"+elm+\
                 "' type not defined yet, passing through..."
     print>>stderr, 'Warning:', message
-
 def main():
     global _opt
     opt = options()
     _opt = opt
 
     # output file header
-    print>>ofp, "* pyspice.py %s: by Dan White <etihwnad@gmail.com>" % __version__
+    print>>ofp, "* pyspice.py %s: by Dan White <dan@whiteaudio.com>" % __version__
     print>>ofp, "* mail me bug reports, fixes, and comments if you find this useful"
     print>>ofp, "* ----------------------------------------------------------------"
 
@@ -839,6 +807,10 @@ def main():
             if len(v):
                 print>>s, '%s: %i' % (t, len(v))
         info(s.getvalue())
+
+    for card in netlist.deck:
+        print>>ofp, card
+
 
 #magic script-maker
 if __name__ == '__main__':
