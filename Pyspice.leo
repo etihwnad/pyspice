@@ -9,14 +9,17 @@
 <preferences/>
 <find_panel_settings/>
 <vnodes>
-<v t="dan.20080319143651" str_leo_pos="4,4,4,4,0"><vh>@chapters</vh></v>
+<v t="dan.20080319143651" str_leo_pos="4,0"><vh>@chapters</vh></v>
 <v t="dan.20070210134628" tnodeList="dan.20070210134628,etihwnad.20060605202632.1"><vh>@file Roadmap</vh>
 <v t="etihwnad.20060605202632.1"><vh>todo</vh></v>
 </v>
 <v t="dan.20070210134929" tnodeList="dan.20070210134929"><vh>@file HISTORY</vh></v>
 <v t="dan.20070210134747" tnodeList="dan.20070210134747"><vh>@file README</vh></v>
+<v t="dan.20100228190229.2782" a="E"><vh>TODO</vh>
+<v t="dan.20100228190229.2783"><vh>parse param expressions</vh></v>
+</v>
 <v t="etihwnad.20060606092308.1" a="E"><vh>@nosent pyspice.py</vh>
-<v t="etihwnad.20060605200356.2" a="E"><vh>&lt;&lt; head docstring&gt;&gt;</vh>
+<v t="etihwnad.20060605200356.2"><vh>&lt;&lt; head docstring&gt;&gt;</vh>
 <v t="etihwnad.20060605202504"><vh>&lt;&lt; head &gt;&gt;</vh></v>
 <v t="etihwnad.20060605201903"><vh>&lt;&lt; copyright &gt;&gt;</vh></v>
 <v t="dan.20061011115934"><vh>&lt;&lt; release notes &gt;&gt;</vh>
@@ -28,18 +31,18 @@
 </v>
 <v t="etihwnad.20060605210612"><vh>&lt;&lt; global imports &gt;&gt;</vh></v>
 <v t="etihwnad.20060605205852"><vh>&lt;&lt; global vars &gt;&gt;</vh></v>
-<v t="etihwnad.20060609195838" a="E"><vh>Option processing</vh>
+<v t="etihwnad.20060609195838"><vh>Option processing</vh>
 <v t="etihwnad.20060605200356.36"><vh>options</vh></v>
 </v>
 <v t="etihwnad.20060605211347" a="E"><vh>classes</vh>
 <v t="dan.20070113152139"><vh>exceptions</vh>
 <v t="dan.20070113152139.1"><vh>class UnitError</vh></v>
-<v t="etihwnad.20060605200356.32" a="E"><vh>class ElementError</vh>
+<v t="etihwnad.20060605200356.32"><vh>class ElementError</vh>
 <v t="etihwnad.20060605200356.33"><vh>__init__</vh></v>
 <v t="etihwnad.20060605200356.34"><vh>__str__</vh></v>
 </v>
 </v>
-<v t="dan.20061229140222" a="E"><vh>class Netlist</vh>
+<v t="dan.20061229140222"><vh>class Netlist</vh>
 <v t="dan.20061229141817"><vh>__init__</vh></v>
 <v t="dan.20080323201044"><vh>_addMassagedLine</vh></v>
 <v t="dan.20061229215859"><vh>addElement</vh></v>
@@ -53,13 +56,13 @@
 <v t="dan.20061229231842.1"><vh>__init__</vh></v>
 <v t="dan.20061229231842.2"><vh>add_handler</vh></v>
 </v>
-<v t="dan.20061008213431" a="E"><vh>base classes</vh>
-<v t="etihwnad.20060605200356.3" a="E"><vh>class SpiceElement</vh>
+<v t="dan.20061008213431"><vh>base classes</vh>
+<v t="etihwnad.20060605200356.3"><vh>class SpiceElement</vh>
 <v t="etihwnad.20060605200356.4"><vh>__init__</vh></v>
 <v t="etihwnad.20060605200356.5"><vh>__str__</vh></v>
 <v t="etihwnad.20060605200356.6"><vh>drop</vh></v>
 </v>
-<v t="etihwnad.20060605200356.11" a="E"><vh>class Passive2NodeElement</vh>
+<v t="etihwnad.20060605200356.11"><vh>class Passive2NodeElement</vh>
 <v t="etihwnad.20060605200356.12"><vh>__init__</vh></v>
 <v t="etihwnad.20060605200356.13"><vh>__str__</vh></v>
 <v t="etihwnad.20060605200356.14"><vh>drop</vh></v>
@@ -107,11 +110,11 @@
 </v>
 </v>
 </v>
-<v t="dan.20080323214255" a="E"><vh>functions</vh>
+<v t="dan.20080323214255"><vh>functions</vh>
 <v t="dan.20080323214255.1"><vh>combineCapacitorsInplace</vh></v>
 <v t="dan.20080323223326"><vh>combineMosfetsInplace</vh></v>
 </v>
-<v t="etihwnad.20060609195838.1" a="E"><vh>helpers</vh>
+<v t="etihwnad.20060609195838.1"><vh>helpers</vh>
 <v t="etihwnad.20060612075426"><vh>unit</vh></v>
 <v t="etihwnad.20060605200356.27"><vh>debug</vh></v>
 <v t="etihwnad.20060605200356.26"><vh>info</vh></v>
@@ -592,6 +595,14 @@ def massageLine(self, line):
 <t tx="dan.20080325141426">pyspice.py v0.2a:
 ----------------
 -added a missing newline before an import statement
+
+</t>
+<t tx="dan.20100228190229.2782">@nocolor</t>
+<t tx="dan.20100228190229.2783">hspice-style .param foo = 'x*a*sqrt(bar)'
+evaluation and substitution
+
+hspice also supports user functions
+.param func(x,y) = 'x+y'
 
 </t>
 <t tx="etihwnad.20060605200356.2">"""
