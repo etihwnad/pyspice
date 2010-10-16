@@ -1,0 +1,401 @@
+#!/usr/bin/env python
+
+import os
+import cPickle
+import matplotlib as mpl
+import numpy as np
+import subprocess as sp
+from pylab import *
+
+#import joblib
+
+#joblibCacheDir = '.cache'
+#if not os.path.exists(joblibCacheDir):
+    #os.mkdir('.cache')
+
+#mem = joblib.memory.Memory(cachedir='.cache', mmap_mode='c')
+
+NaN = float('NaN')
+
+def zc(x):
+    """Return the flat index array of zero-crossings of x.  Index
+    is floor(true-zc-idx)."""
+    # entries identical to zero
+    ez = list(np.flatnonzero(x == 0))
+
+    # sign change, pass thru zero
+    s = np.sign(x)
+    cz = list(np.flatnonzero(s[1:] != s[:-1]))
+
+    # there is an entry in both lists for any ez elements, remove from cz
+    for e in ez:
+        if e-1 in cz:
+            cz.remove(e-1)
+            cz.remove(e)
+    y = np.concatenate((ez, cz))
+    y.sort()
+    return y
+
+
+class SimulationData:
+    """Base class for holding simulation data.  Data held in a numpy.array.
+    Access data via attributes or d.data array.
+    """
+    def __init__(self, infile=None):
+        #defaults only, all set by subclasses
+        self.infile = infile
+        self.cols = None
+        self.colset = None
+        self.siglist = []
+        self._sig2idx = {}
+        self.sweep = {}
+        self.sweepvals = []
+        self.sweepvar = None
+
+        if infile:
+            self.loadData(infile)
+
+
+    #def __getstate__(self):
+        #print '*** in getstate'
+        #odict = self.__dict__.copy()
+        #print odict['siglist']
+
+        #npzfile = '.' + self.infile + '.npz'
+        #odict['npzfile'] = npzfile
+        #savestr = 'np.savez(npzfile'
+        #savenames = []
+        #for k,v in self.__dict__.iteritems():
+            #print k, type(v)
+            #if isinstance(v, np.ndarray):
+                #print '* saving', k
+                #savenames.append(k)
+                #savestr += ', %s=self.%s' % (k,k)
+                #del odict[k]
+        #savestr += ')'
+        #print savestr
+        #exec(savestr)
+        #return odict
+
+    #def __setstate__(self, dict):
+        #print '*** in setstate'
+        #npz = np.load(dict['npzfile'])
+        #print 'saved arrays:', npz.files
+        #print dict.keys()
+        #for v in npz.files:
+            #setattr(self, v, npz[v])
+        #self.__dict__.update(dict)
+
+    #def __getinitargs__(self):
+        #return (self.infile, )
+
+    def addSweep(self, sweepidx):
+        """Return another SimulationData object with a custom view of the
+        rows of self.data and corresponding self._independent.  Does not
+        copy data, just references a slice of self.data."""
+        c = SimulationData()
+        c.cols = self.cols
+        c.colset = self.colset
+        c.siglist = self.siglist
+        c._sig2idx = self._sig2idx
+        c.sweepvar = self.sweepvar
+        c.sweepval = self.sweepvals[sweepidx]
+        rowidx = self.data[:,0] == c.sweepval
+        c.data = self.data[rowidx,:]
+        c._independent = self._independent[rowidx]
+        #reset to new range
+        c.xrange()
+        return c
+
+    def __getattr__(self, attr):
+        """Returns the named signal, sliced with the current self.xrange."""
+        if attr in self.siglist:
+            idx = self._sig2idx[attr]
+            return self.data[self._slice, idx]
+        else:
+            raise AttributeError
+
+    def xrange(self, xr=None):
+        """Set the current independent axis range as tuple (xmin, xmax).  If
+        xr=None, reset the data slice to the full range."""
+        if not xr:
+            self._xlims = [0, len(self._independent+1)]
+            self._slice = slice(self._xlims[0], self._xlims[1])
+        else:
+            xmin, xmax = xr
+            self._xlims = [xmin, xmax]
+            zmin =  zc(self._independent - xmin)
+            zmax = zc(self._independent - xmax)
+            imin = zmin[0] if zmin.size else 0
+            imax = zmax[0] if zmax.size else len(self._independent+1)
+            self._slice = slice(imin, imax)
+        self.x = self._independent[self._slice]
+
+
+
+
+class GnucapData(SimulationData):
+    """Collect and present a Gnucap simulation output file as a numpy.array with
+    access to column labels.
+
+    This is for the ASCII default format, the SBSO v0.1 format is easy
+    but unimplemented.
+    """
+    def loadData(self, infile):
+        fin = open(infile, 'rb')
+
+        header = fin.readline()
+        cols = header.split()
+        self.cols = cols
+
+        #load cache if exists
+        npy = '.' + infile + '.npy'
+        mtime = os.path.getmtime
+        if os.path.exists(npy) and mtime(npy) >= mtime(infile):
+            print 'GnucapData: loading cached', npy
+            data = np.load(npy, 'r')
+        else:
+            print 'GnucapData: reading', infile, ' caching to', npy
+            data = np.genfromtxt(fin)
+            np.save(npy, data)
+        
+        # handle duplicate columns
+        # only use the last-defined name position
+        colset = []
+        for i,c in enumerate(cols):
+            if c not in cols[i+1:]:
+                colset.append([i, c])
+
+        self.colset = colset
+
+        #make signal vectors numpy arrays
+        self.siglist = []
+        self._sig2idx = {}
+        for i,name in colset:
+            # TODO: np.float only, handle complex also
+            #data[name] = np.array(data[name], dtype=np.float)
+
+            #set as an attributs also
+            n = name.replace('(', '')
+            n = n.replace(')', '')
+            n = n.replace('.', '_')
+            self.siglist.append(n)
+            self._sig2idx[n] = i
+
+            # special independent variable column
+            if name.startswith('#'):
+                n = '#Sweep' if name == '#' else n
+                setattr(self, n[1:], data[:,i])
+                setattr(self, '_independent', data[:,i])
+            else:
+                pass
+                #setattr(self, n, data[:,i])
+
+        self.data = data
+
+        #default to full display range, init relevant attributes
+        self.xrange()
+
+        return self
+
+
+
+
+
+class HspiceData(SimulationData):
+    """Convert HSPICE sim data of .option post_version=9601 via sp2sp and
+    import into numpy.array with column labels.
+    """
+    def loadData(self, infile):
+        mtime = os.path.getmtime
+        exists = os.path.exists
+
+        #intialize vars
+        colset = []
+        self.siglist = []
+        self._sig2idx = {}
+        self.sweepvar = None
+
+        # use gwave's converter to help out
+        tmp = infile + '.tr'
+        ascii = infile + '.sp2sp'
+        if not exists(ascii) or mtime(infile) > mtime(ascii):
+            print 'HspiceData: retranslating data to', ascii
+            fin = open(infile)
+            ftmp = open(tmp, 'wb')
+            fsp2sp = open(ascii, 'wb')
+            tr = sp.Popen(["tr", r"'\000\301\201\031\f\'", "' '"],
+                          stdin=fin, stdout=ftmp)
+            tr.wait()
+            ftmp.close()
+            sp2sp = sp.Popen(["sp2sp", "-d 10 -s prepend -c ascii", tmp],
+                             stdout=fsp2sp)
+            sp2sp.wait()
+            fsp2sp.close()
+        #fin = sp2sp.stdout
+        fin = open(ascii)
+        header = fin.readline()
+        cols = header.split()
+        self.cols = cols
+
+        #load cache if exists
+        npy = '.' + infile + '.npy'
+        if os.path.exists(npy) and mtime(npy) >= mtime(infile):
+            print 'HspiceData: loading cached', npy
+            data = np.load(npy, 'r')
+        else:
+            print 'HspiceData: reading', infile, ' caching to', npy
+            data = np.genfromtxt(fin)
+            np.save(npy, data)
+
+        # check for sweep
+        if ':' in cols[0]:
+            self.sweepvar = cols[0]
+            self.sweepvals = sorted(set(data[:,0]))
+        elif '.' in cols[0]:
+            #parameter sweep
+            self.sweepvar = 'param'
+            self.sweepvals = sorted(set(data[:,0]))
+        elif cols[0].lower() == cols[0]:
+            self.sweepvar = cols[0]
+            self.sweepvals = sorted(set(data[:,0]))
+        elif 'MONTE_CARLO' == cols[0]:
+            self.sweepvar = 'MC'
+            self.sweepvals = sorted(set(data[:,0]))
+
+        if self.sweepvar:
+            print 'Contained sweeps:', self.sweepvar, map(str, self.sweepvals)
+
+        # handle duplicate columns
+        # only use the last-defined name position
+        # XXX: does this happen with HSPICE data?
+        for i,c in enumerate(cols):
+            if c not in cols[i+1:]:
+                colset.append([i, c])
+
+        self.colset = colset
+
+        #make signal vectors numpy arrays
+        for i,name in colset:
+            # TODO: np.float only, handle complex also
+            #data[name] = np.array(data[name], dtype=np.float)
+
+            #set as an attributs also
+            n = name.replace('(', '')
+            #n = n.replace(')', '')
+            n = n.replace('.', '_')
+            self.siglist.append(n)
+            self._sig2idx[n] = i
+
+            if (self.sweepvar and i == 1) or (not self.sweepvar and i == 0):
+                setattr(self, n, data[:,i])
+                setattr(self, '_independent', data[:,i])
+
+        self.data = data
+
+        #default to full display range, init relevant attributes
+        self.xrange()
+
+        # separate out sweeps into self.sweep[0] and self.sweep['0,0']
+        if self.sweepvar:
+            for i,val in enumerate(self.sweepvals):
+                d = self.addSweep(i)
+                self.sweep[i] = d
+                self.sweep[str(self.sweepvals[i])] = self.sweep[i]
+
+        return self
+
+
+def loadSimData(dfile):
+    if dfile.endswith('.dat'):
+        return GnucapData(dfile)
+    else:
+        return HspiceData(dfile)
+
+
+class SignalPlotter():
+    def __init__(self, gcdata=None):
+        self.gcdata = gcdata
+
+    def __call__(self, ys, *args, **kwargs):
+        """Plot the signal named by string ys, label the curve by the true
+        signal name UOS.  Additional args are passed to plot().
+        """
+        if 'label' not in kwargs:
+            idx = self.gcdata._sig2idx[ys]
+            kwargs['label'] = self.gcdata.cols[idx]
+        y = getattr(self.gcdata, ys)
+        plot(self.gcdata.x, y, *args, **kwargs)
+        legend(loc='best')
+
+def plotsweep(d, exp, vals=None, globals=None, labelprefix='', type=None):
+    interact = isinteractive()
+    if interact:
+        interactive(False)
+
+    if not vals:
+        vals = d.sweepvals
+
+    for v in vals:
+        s = d.sweep[str(v)]
+        
+        if isinstance(exp, str):
+            if globals:
+                y = eval(exp, globals, locals())
+            else:
+                y = eval(exp)
+        else:
+            y = exp(s)
+
+        if not type:
+            p = plot
+        elif type == 'semilogx':
+            p = semilogx
+        elif type == 'semilogy':
+            p = semilogy
+        elif type == 'loglog':
+            p = loglog
+
+        p(s._independent,
+          y,
+          label='%s%s=%g' % (labelprefix, s.sweepvar, s.sweepval))
+
+    interactive(interact)
+    legend(loc='best')
+
+
+if __name__ == "__main__":
+    import optparse
+    import sys
+
+    from pylab import *
+
+    usage = 'usage: %prog [options] simdata.dat'
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-I', '--noninteractive', dest='interactive',
+                      help='Do not drop into IPython shell after loading',
+                      action='store_false', default=True)
+
+    opts, args = parser.parse_args()
+
+    fname = args[0]
+    d = loadSimData(fname)
+
+    #if fname.endswith('.dat'):
+        #d = GnucapData(fname)
+    #else:
+        #d = HspiceData(fname)
+
+    p = SignalPlotter(d)
+
+    interactive(True)
+    rcParams['axes.grid'] = True
+
+
+    if opts.interactive:
+        print d.siglist
+
+        from IPython.Shell import IPShellEmbed
+        ipshell = IPShellEmbed(banner='*** Dropping into IPython. ***')
+        ipshell(header='', global_ns=globals())
+
