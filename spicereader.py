@@ -1,20 +1,11 @@
 #!/usr/bin/env python
 
 import os
-import cPickle
-import matplotlib as mpl
 import numpy as np
 import subprocess as sp
 import struct
 from pylab import *
 
-#import joblib
-
-#joblibCacheDir = '.cache'
-#if not os.path.exists(joblibCacheDir):
-    #os.mkdir('.cache')
-
-#mem = joblib.memory.Memory(cachedir='.cache', mmap_mode='c')
 
 NaN = float('NaN')
 
@@ -231,7 +222,8 @@ class HspiceData(SimulationData):
         fnpy.seek(-2, os.SEEK_END)
         dictlen = struct.unpack('<H', fnpy.read(2))[0]
         fnpy.seek(-dictlen, os.SEEK_END)
-        npyinfo = safe_eval(fnpy.readline())
+        s = fnpy.readline()
+        npyinfo = safe_eval(s)
         self.npy = npyinfo
         print npyinfo
         fnpy.close()
