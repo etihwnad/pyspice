@@ -5,6 +5,7 @@ import cPickle
 import matplotlib as mpl
 import numpy as np
 import subprocess as sp
+import struct
 from pylab import *
 
 #import joblib
@@ -91,7 +92,7 @@ class SimulationData:
 
     def addSweep(self, sweepidx):
         """Return another SimulationData object with a custom view of the
-        rows of self.data and corresponding self._independent.  Does not
+        rows of self.data and corresponding self._ivar.  Does not
         copy data, just references a slice of self.data."""
         c = SimulationData()
         c.cols = self.cols
@@ -102,7 +103,7 @@ class SimulationData:
         c.sweepval = self.sweepvals[sweepidx]
         rowidx = self.data[:,0] == c.sweepval
         c.data = self.data[rowidx,:]
-        c._independent = self._independent[rowidx]
+        c._ivar = self._ivar[rowidx]
         #reset to new range
         c.xrange()
         return c
@@ -119,17 +120,17 @@ class SimulationData:
         """Set the current independent axis range as tuple (xmin, xmax).  If
         xr=None, reset the data slice to the full range."""
         if not xr:
-            self._xlims = [0, len(self._independent+1)]
+            self._xlims = [0, len(self._ivar+1)]
             self._slice = slice(self._xlims[0], self._xlims[1])
         else:
             xmin, xmax = xr
             self._xlims = [xmin, xmax]
-            zmin =  zc(self._independent - xmin)
-            zmax = zc(self._independent - xmax)
+            zmin =  zc(self._ivar - xmin)
+            zmax = zc(self._ivar - xmax)
             imin = zmin[0] if zmin.size else 0
-            imax = zmax[0] if zmax.size else len(self._independent+1)
+            imax = zmax[0] if zmax.size else len(self._ivar+1)
             self._slice = slice(imin, imax)
-        self.x = self._independent[self._slice]
+        self.x = self._ivar[self._slice]
 
 
 
@@ -186,7 +187,7 @@ class GnucapData(SimulationData):
             if name.startswith('#'):
                 n = '#Sweep' if name == '#' else n
                 setattr(self, n[1:], data[:,i])
-                setattr(self, '_independent', data[:,i])
+                setattr(self, '_ivar', data[:,i])
             else:
                 pass
                 #setattr(self, n, data[:,i])
@@ -217,41 +218,36 @@ class HspiceData(SimulationData):
         self.sweepvar = None
 
         # use gwave's converter to help out
-        tmp = infile + '.tr'
-        ascii = infile + '.sp2sp'
-        if not exists(ascii) or mtime(infile) > mtime(ascii):
-            print 'HspiceData: retranslating data to', ascii
-            fin = open(infile)
-            ftmp = open(tmp, 'wb')
-            fsp2sp = open(ascii, 'wb')
-            tr = sp.Popen(["tr", r"'\000\301\201\031\f\'", "' '"],
-                          stdin=fin, stdout=ftmp)
-            tr.wait()
-            ftmp.close()
-            sp2sp = sp.Popen(["sp2sp", "-d 10 -s prepend -c ascii", tmp],
-                             stdout=fsp2sp)
-            sp2sp.wait()
-            fsp2sp.close()
-        #fin = sp2sp.stdout
-        fin = open(ascii)
-        header = fin.readline()
-        cols = header.split()
+        # make cache file with custom sp2sp from gwave-svn
+        npy = infile + '.npy'
+        if not exists(npy) or mtime(infile) > mtime(npy):
+            print 'HspiceData: caching data to', npy
+            sp2sp = sp.call(['sp2sp', '-c', 'numpy', '-o', npy, infile])
+            print sp2sp
+
+        #load cache file footer
+        print 'HspiceData: loading cached', npy
+        fnpy = open(npy, 'rb')
+        fnpy.seek(-2, os.SEEK_END)
+        dictlen = struct.unpack('<H', fnpy.read(2))[0]
+        fnpy.seek(-dictlen, os.SEEK_END)
+        npyinfo = safe_eval(fnpy.readline())
+        self.npy = npyinfo
+        print npyinfo
+        fnpy.close()
+
+        cols = npyinfo['cols']
         self.cols = cols
 
-        #load cache if exists
-        npy = '.' + infile + '.npy'
-        if os.path.exists(npy) and mtime(npy) >= mtime(infile):
-            print 'HspiceData: loading cached', npy
-            data = np.load(npy, 'r')
-        else:
-            print 'HspiceData: reading', infile, ' caching to', npy
-            data = np.genfromtxt(fin)
-            np.save(npy, data)
+        # load data as a numpy memmap
+        data = np.load(npy, 'r')
 
         # check for sweep
-        if ':' in cols[0]:
-            self.sweepvar = cols[0]
-            self.sweepvals = sorted(set(data[:,0]))
+        #TODO: only handles one sweep var, no nested
+        nsweepvars = len(npyinfo['sweepvars'])
+        if npyinfo['sweepvars']:
+            self.sweepvar = npyinfo['sweepvars'][0]
+            self.sweepvals = [data[first,0] for first,last in npyinfo['sweeprows']]
         elif '.' in cols[0]:
             #parameter sweep
             self.sweepvar = 'param'
@@ -271,7 +267,8 @@ class HspiceData(SimulationData):
         # XXX: does this happen with HSPICE data?
         for i,c in enumerate(cols):
             if c not in cols[i+1:]:
-                colset.append([i, c])
+                #account for prepended sweep values
+                colset.append([i+nsweepvars, c])
 
         self.colset = colset
 
@@ -280,7 +277,7 @@ class HspiceData(SimulationData):
             # TODO: np.float only, handle complex also
             #data[name] = np.array(data[name], dtype=np.float)
 
-            #set as an attributs also
+            #set as an attribute also
             n = name.replace('(', '')
             #n = n.replace(')', '')
             n = n.replace('.', '_')
@@ -289,7 +286,7 @@ class HspiceData(SimulationData):
 
             if (self.sweepvar and i == 1) or (not self.sweepvar and i == 0):
                 setattr(self, n, data[:,i])
-                setattr(self, '_independent', data[:,i])
+                setattr(self, '_ivar', data[:,i])
 
         self.data = data
 
@@ -317,7 +314,7 @@ class SignalPlotter():
     def __init__(self, gcdata=None):
         self.gcdata = gcdata
 
-    def __call__(self, ys, *args, **kwargs):
+    def __call__(self, ys, x=None, *args, **kwargs):
         """Plot the signal named by string ys, label the curve by the true
         signal name UOS.  Additional args are passed to plot().
         """
@@ -328,7 +325,8 @@ class SignalPlotter():
         plot(self.gcdata.x, y, *args, **kwargs)
         legend(loc='best')
 
-def plotsweep(d, exp, vals=None, globals=None, labelprefix='', type=None):
+def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
+              type=None):
     interact = isinteractive()
     if interact:
         interactive(False)
@@ -356,9 +354,18 @@ def plotsweep(d, exp, vals=None, globals=None, labelprefix='', type=None):
         elif type == 'loglog':
             p = loglog
 
-        p(s._independent,
-          y,
-          label='%s%s=%g' % (labelprefix, s.sweepvar, s.sweepval))
+        if ivar:
+            if isinstance(ivar, str):
+                if globals:
+                    x = eval(exp, globals, locals())
+                else:
+                    x = eval(exp)
+            else:
+                x = exp(s)
+        else:
+            x = s.x
+
+        p(x, y, label='%s%s=%g' % (labelprefix, s.sweepvar, s.sweepval))
 
     interactive(interact)
     legend(loc='best')
