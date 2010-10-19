@@ -214,7 +214,6 @@ class HspiceData(SimulationData):
         if not exists(npy) or mtime(infile) > mtime(npy):
             print 'HspiceData: caching data to', npy
             sp2sp = sp.call(['sp2sp', '-c', 'numpy', '-o', npy, infile])
-            print sp2sp
 
         #load cache file footer
         print 'HspiceData: loading cached', npy
@@ -222,10 +221,9 @@ class HspiceData(SimulationData):
         fnpy.seek(-2, os.SEEK_END)
         dictlen = struct.unpack('<H', fnpy.read(2))[0]
         fnpy.seek(-dictlen, os.SEEK_END)
-        s = fnpy.readline()
+        s = fnpy.readline().lstrip()
         npyinfo = safe_eval(s)
         self.npy = npyinfo
-        print npyinfo
         fnpy.close()
 
         cols = npyinfo['cols']
