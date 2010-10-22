@@ -722,7 +722,7 @@ def combineMosfetsInplace(nlist):
                 nlist.removeElement(x)
 
     return n
-RE_UNIT = re.compile(r'^([0-9e\+\-\.]+)(t|g|meg|x|k|mil|m|u|n|p|f)?')
+RE_UNIT = re.compile(r'^([0-9e\+\-\.]+)(t|g|meg|x|k|mil|m|u|n|p|f|a)?')
 def unit(s):
     """Takes a string and returns the equivalent float.
     '3.0u' -> 3.0e-6"""
@@ -736,7 +736,8 @@ def unit(s):
             'u'  :Decimal('1.0e-6'),
             'n'  :Decimal('1.0e-9'),
             'p'  :Decimal('1.0e-12'),
-            'f'  :Decimal('1.0e-15')}
+            'f'  :Decimal('1.0e-15'),
+            'a'  :Decimal('1.0e-18')}
 
     m = RE_UNIT.search(s.lower())
     try:
