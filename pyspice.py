@@ -742,11 +742,14 @@ def unit(s):
     m = RE_UNIT.search(s.lower())
     try:
         if m.group(2):
-            return Decimal(Decimal(m.group(1)))*mult[m.group(2)]
+            x = Decimal(Decimal(m.group(1)))*mult[m.group(2)]
         else:
-            return Decimal(m.group(1))
+            x = Decimal(m.group(1))
     except:
         raise BadUnitError
+
+    return float(x)
+
 def debug(message):
     """Print debugging info to stderr."""
     for m in message.split('\n'):
