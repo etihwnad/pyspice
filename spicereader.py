@@ -104,6 +104,12 @@ class SimulationData:
         if attr in self.siglist:
             idx = self._sig2idx[attr]
             return self.data[self._slice, idx]
+        elif attr + '_0' in self.siglist:
+            # auto return a complex vector if 'attr' is really attr_0 attr_1
+            idx0 = self._sig2idx[attr+'_0']
+            idx1 = self._sig2idx[attr+'_1']
+            return (self.data[self._slice, idx0] + 
+                    1j*self.data[self._slice, idx1])
         else:
             raise AttributeError
 
