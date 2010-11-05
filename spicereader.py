@@ -242,8 +242,9 @@ class HspiceData(SimulationData):
         #TODO: only handles one sweep var, no nested
         nsweepvars = len(npyinfo['sweepvars'])
         if npyinfo['sweepvars']:
+            #TODO: sweeprows has lots of (0,0)'s for a MC sweep
             self.sweepvar = npyinfo['sweepvars'][0]
-            self.sweepvals = [data[first,0] for first,last in npyinfo['sweeprows']]
+            self.sweepvals = [data[first,0] for first,last in npyinfo['sweeprows'] if last != 0]
         elif '.' in cols[0]:
             #parameter sweep
             self.sweepvar = 'param'
