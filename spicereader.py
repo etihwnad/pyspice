@@ -127,7 +127,8 @@ class SimulationData:
         c.data = self.data[rowidx,:]
         c._ivar = self._ivar[rowidx]
         #reset to new range
-        c.xrange()
+        #c.xrange()
+        c.x = c._ivar
         self.sweep[name] = c
         return c
 
@@ -135,7 +136,7 @@ class SimulationData:
         """Set the current independent axis range as tuple (xmin, xmax).  If
         xr=None, reset the data slice to the full range."""
         if not xr:
-            self._xlims = [0, len(self._ivar+1)]
+            self._xlims = [0, len(self._ivar)+1]
             self._slice = slice(self._xlims[0], self._xlims[1])
         else:
             xmin, xmax = xr
@@ -307,7 +308,8 @@ class HspiceData(SimulationData):
         self.data = data
 
         #default to full display range, init relevant attributes
-        self.xrange()
+        #self.xrange()
+        self.x = self._ivar
 
         # separate out sweeps into self.sweep[0] and self.sweep['0,0']
         if 0: #use getSweep() instead
