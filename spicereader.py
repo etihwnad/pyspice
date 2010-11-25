@@ -47,6 +47,20 @@ class SimulationData:
         if infile:
             self.loadData(infile)
 
+    def __getattr__(self, attr):
+        """Returns the named signal, sliced with the current self.xrange."""
+        if attr in self.siglist:
+            idx = self._sig2idx[attr]
+            return self.data[self._slice, idx]
+        elif attr + '_0' in self.siglist:
+            # auto return a complex vector if 'attr' is really attr_0 attr_1
+            idx0 = self._sig2idx[attr+'_0']
+            idx1 = self._sig2idx[attr+'_1']
+            return (self.data[self._slice, idx0] + 
+                    1j*self.data[self._slice, idx1])
+        else:
+            raise AttributeError
+
 
     #def __getstate__(self):
         #print '*** in getstate'
@@ -81,37 +95,41 @@ class SimulationData:
     #def __getinitargs__(self):
         #return (self.infile, )
 
-    def addSweep(self, sweepidx):
+    def getSweep(self, name):
         """Return another SimulationData object with a custom view of the
         rows of self.data and corresponding self._ivar.  Does not
         copy data, just references a slice of self.data."""
+        # return cached value
+        #sweep index
+        if name in self.sweep:
+            return self.sweep[name]
+        #str(sweep_value)
+        elif str(name) in self.sweep:
+            return self.sweep[str(name)]
+
+        # cache and return new sweep instance
+        if isinstance(name, int) and name >= 0 and name < len(self.sweepvals):
+            idx = name
+        elif str(name) in map(str, self.sweepvals):
+            idx = self.sweepvals.index(name)
+            name = str(name)
+        else:
+            raise ValueError('OOPS: %s is not a valid sweep name.' % repr(name))
+
         c = SimulationData()
         c.cols = self.cols
         c.colset = self.colset
         c.siglist = self.siglist
         c._sig2idx = self._sig2idx
         c.sweepvar = self.sweepvar
-        c.sweepval = self.sweepvals[sweepidx]
-        rowidx = self.data[:,0] == c.sweepval
+        c.sweepval = self.sweepvals[idx]
+        rowidx = (self.data[:,0] == c.sweepval)
         c.data = self.data[rowidx,:]
         c._ivar = self._ivar[rowidx]
         #reset to new range
         c.xrange()
+        self.sweep[name] = c
         return c
-
-    def __getattr__(self, attr):
-        """Returns the named signal, sliced with the current self.xrange."""
-        if attr in self.siglist:
-            idx = self._sig2idx[attr]
-            return self.data[self._slice, idx]
-        elif attr + '_0' in self.siglist:
-            # auto return a complex vector if 'attr' is really attr_0 attr_1
-            idx0 = self._sig2idx[attr+'_0']
-            idx1 = self._sig2idx[attr+'_1']
-            return (self.data[self._slice, idx0] + 
-                    1j*self.data[self._slice, idx1])
-        else:
-            raise AttributeError
 
     def xrange(self, xr=None):
         """Set the current independent axis range as tuple (xmin, xmax).  If
@@ -245,6 +263,7 @@ class HspiceData(SimulationData):
             #TODO: sweeprows has lots of (0,0)'s for a MC sweep
             self.sweepvar = npyinfo['sweepvars'][0]
             self.sweepvals = [data[first,0] for first,last in npyinfo['sweeprows'] if last != 0]
+        #NOTE: the following is unreachable??, if sweep: 'sweepvars' exists from cache
         elif '.' in cols[0]:
             #parameter sweep
             self.sweepvar = 'param'
@@ -291,11 +310,12 @@ class HspiceData(SimulationData):
         self.xrange()
 
         # separate out sweeps into self.sweep[0] and self.sweep['0,0']
-        if self.sweepvar:
-            for i,val in enumerate(self.sweepvals):
-                d = self.addSweep(i)
-                self.sweep[i] = d
-                self.sweep[str(self.sweepvals[i])] = self.sweep[i]
+        if 0: #use getSweep() instead
+            if self.sweepvar:
+                for i,val in enumerate(self.sweepvals):
+                    d = self.getSweep(i)
+                    self.sweep[i] = d
+                    self.sweep[str(self.sweepvals[i])] = self.sweep[i]
 
         return self
 
@@ -323,7 +343,7 @@ class SignalPlotter():
         legend(loc='best')
 
 def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
-              type=None):
+              plotter=None):
     interact = isinteractive()
     if interact:
         interactive(False)
@@ -332,7 +352,7 @@ def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
         vals = d.sweepvals
 
     for v in vals:
-        s = d.sweep[str(v)]
+        s = d.getSweep(v)
         
         if isinstance(exp, str):
             if globals:
@@ -342,14 +362,10 @@ def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
         else:
             y = exp(s)
 
-        if not type:
+        if plotter:
+            p = plotter
+        else:
             p = plot
-        elif type == 'semilogx':
-            p = semilogx
-        elif type == 'semilogy':
-            p = semilogy
-        elif type == 'loglog':
-            p = loglog
 
         if ivar:
             if isinstance(ivar, str):
