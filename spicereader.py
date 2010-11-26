@@ -127,8 +127,8 @@ class SimulationData:
         c.data = self.data[rowidx,:]
         c._ivar = self._ivar[rowidx]
         #reset to new range
-        #c.xrange()
-        c.x = c._ivar
+        c.xrange()
+        #c.x = c._ivar
         self.sweep[name] = c
         return c
 
@@ -308,8 +308,8 @@ class HspiceData(SimulationData):
         self.data = data
 
         #default to full display range, init relevant attributes
-        #self.xrange()
-        self.x = self._ivar
+        self.xrange()
+        #self.x = self._ivar
 
         # separate out sweeps into self.sweep[0] and self.sweep['0,0']
         if 0: #use getSweep() instead
