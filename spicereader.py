@@ -4,7 +4,7 @@ import os
 import numpy as np
 import subprocess as sp
 import struct
-from pylab import *
+import pylab as pyl
 
 
 NaN = float('NaN')
@@ -247,7 +247,7 @@ class HspiceData(SimulationData):
         dictlen = struct.unpack('<H', fnpy.read(2))[0]
         fnpy.seek(-dictlen, os.SEEK_END)
         s = fnpy.readline().lstrip()
-        npyinfo = safe_eval(s)
+        npyinfo = np.lib.utils.safe_eval(s)
         self.npy = npyinfo
         fnpy.close()
 
@@ -341,14 +341,14 @@ class SignalPlotter():
             idx = self.gcdata._sig2idx[ys]
             kwargs['label'] = self.gcdata.cols[idx]
         y = getattr(self.gcdata, ys)
-        plot(self.gcdata.x, y, *args, **kwargs)
-        legend(loc='best')
+        pyl.plot(self.gcdata.x, y, *args, **kwargs)
+        pyl.legend(loc='best')
 
 def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
               plotter=None):
-    interact = isinteractive()
+    interact = pyl.isinteractive()
     if interact:
-        interactive(False)
+        pyl.interactive(False)
 
     if not vals:
         vals = d.sweepvals
@@ -367,7 +367,7 @@ def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
         if plotter:
             p = plotter
         else:
-            p = plot
+            p = pyl.plot
 
         if ivar:
             if isinstance(ivar, str):
@@ -382,8 +382,8 @@ def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
 
         p(x, y, label='%s%s=%g' % (labelprefix, s.sweepvar, s.sweepval))
 
-    interactive(interact)
-    legend(loc='best')
+    pyl.interactive(interact)
+    pyl.legend(loc='best')
 
 
 if __name__ == "__main__":
