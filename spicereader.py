@@ -341,7 +341,11 @@ class SignalPlotter():
             idx = self.gcdata._sig2idx[ys]
             kwargs['label'] = self.gcdata.cols[idx]
         y = getattr(self.gcdata, ys)
-        pyl.plot(self.gcdata.x, y, *args, **kwargs)
+
+        if 'plotter' in kwargs:
+            kwargs['plotter'](self.gcdata.x, y, *args, **kwargs)
+        else:
+            pyl.plot(self.gcdata.x, y, *args, **kwargs)
         pyl.legend(loc='best')
 
 def plotsweep(d, exp, vals=None, ivar=None, globals=None, labelprefix='',
